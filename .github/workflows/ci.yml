@@ -1,0 +1,48 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 1'
+
+jobs:
+  full_ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        toolchain: [ stable, 1.65.0 ]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup rust version
+        run: rustup default ${{ matrix.toolchain }}
+
+      - name: Clippy fmt
+        run: |
+          cargo fmt -- --check
+        if: ${{ matrix.type == 'stable' }}
+
+      - name: Clippy check
+        run: |
+          cargo check
+          cargo check --all-features
+          cargo check --no-default-features --features "time-local-offset"
+          cargo check --no-default-features --features "chrono-local-offset"
+
+      - name: Clippy pedantic
+        run: |
+          cargo clippy -- -W clippy::pedantic -A clippy::module-name-repetitions -A clippy::missing-errors-doc -A clippy::inline_always -A clippy::wildcard-imports
+        if: ${{ matrix.type == 'stable' }}
+
+      - name: Test
+        run: |
+          cargo test --no-fail-fast -- --nocapture
+          cargo test --all-features --no-fail-fast -- --nocapture
+          cargo test --no-default-features --features "time-local-offset" --no-fail-fast -- --nocapture
+          cargo test --no-default-features --features "chrono-local-offset" --no-fail-fast -- --nocapture
+
+      - name: Doc
+        run: |
+          cargo doc
