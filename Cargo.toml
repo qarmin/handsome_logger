@@ -1,9 +1,9 @@
 [package]
 name = "handsome_logger"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Rafał Mikrut <qarminkrut@gmail.com>"]
-description = "A simple, handsom and quite easy to use logger"
+description = "A fast, handsom and quite easy to use logger"
 documentation = "https://docs.rs/handsome_logger/"
 repository = "https://github.com/qarmin/handsome_logger"
 readme = "README.md"
@@ -20,4 +20,4 @@ chrono-local-offset = ["chrono"] # Time local offset is safe, but sometimes not 
 log = { version = "0.4", features = ["std"] }
 termcolor = { version = "1.2.*" }
 time = { version = "0.3", features = ["formatting", "macros"] }
-chrono = { version = "0.4", optional = true }
+chrono = { version = "0.4.26", optional = true }

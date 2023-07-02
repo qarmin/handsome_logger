@@ -21,7 +21,7 @@ impl<W: Write + Send + 'static> WriteLogger<W> {
 
     #[must_use]
     pub fn new(mut config: Config, writable: W) -> Box<WriteLogger<W>> {
-        config.calculate_tokens();
+        config.calculate_data();
 
         Box::new(WriteLogger {
             level: config.level,

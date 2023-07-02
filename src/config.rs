@@ -22,6 +22,7 @@ pub enum Token {
     ColorEnd,
     Thread,
     Module,
+    FileName,
     File,
     Line,
     Message,
@@ -37,23 +38,33 @@ pub struct Config {
     pub(crate) tokens: [Vec<Token>; LEVEL_NUMBER],
 
     // Colors
-    pub(crate) foreground_color: [Option<Color>; LEVEL_NUMBER],
+    pub(crate) colored_text_color: [Option<Color>; LEVEL_NUMBER],
     pub(crate) background_color: [Option<Color>; LEVEL_NUMBER],
     pub(crate) compiled_colors: [ColorSpec; LEVEL_NUMBER],
     pub(crate) enabled_colors: bool,
 }
 
-const DEFAULT_FORMAT_TEXT: &str = "[_time] [_color_start][[_level]][_color_end] [[_module]:[_line]] [_msg]";
+const DEFAULT_FORMAT_TEXT: &str = "[_time] [_color_start][[_level]][_color_end] [_module]: [_msg]";
+
+const CONF_FULL_FORMAT_TEST: &str = "[_time] [_color_start][[_level]][_color_end] [[_module]] [_file_name]:[_line] - [_msg]";
 
 impl Config {
-    pub fn calculate_colors(&mut self) {
+    /// Internal function to calculate all required data from user input
+    /// this is done only once to avoid unnecessary computations
+    pub(crate) fn calculate_data(&mut self) {
+        self.calculate_tokens();
+        self.calculate_colors();
+    }
+
+    /// Creating `ColorSpec` from user colors
+    fn calculate_colors(&mut self) {
         for (idx, color_spec) in self.compiled_colors.iter_mut().enumerate() {
-            *color_spec = ColorSpec::new().set_bg(self.background_color[idx]).set_fg(self.foreground_color[idx]).clone();
+            *color_spec = ColorSpec::new().set_bg(self.background_color[idx]).set_fg(self.colored_text_color[idx]).clone();
         }
     }
 
     /// Calculate tokens from format text
-    pub(crate) fn calculate_tokens(&mut self) {
+    fn calculate_tokens(&mut self) {
         let allowed_tokens = [
             ("[_time]", Token::Time),
             ("[_level]", Token::Level),
@@ -62,6 +73,7 @@ impl Config {
             ("[_thread]", Token::Thread),
             ("[_module]", Token::Module),
             ("[_file]", Token::File),
+            ("[_file_name]", Token::FileName),
             ("[_line]", Token::Line),
             ("[_msg]", Token::Message),
         ];
@@ -113,6 +125,25 @@ impl ConfigBuilder {
         ConfigBuilder(Config::default())
     }
 
+    /// Preset for saving bigger amount of information than default preset
+    #[must_use]
+    pub fn new_preset_config_full() -> ConfigBuilder {
+        let mut builder = ConfigBuilder::default();
+        builder.set_time_format(
+            TimeFormat::Custom(format_description!(
+                "[year]-[month]-[day] [hour]:[minute]:[second].[subsecond digits:3] [offset_hour sign:mandatory]"
+            )),
+            None,
+        );
+        builder.set_format_text(CONF_FULL_FORMAT_TEST, None);
+        builder
+    }
+
+    /// Sets format of logged message
+    /// E.g. "[_time] [[_level]] [_module] \"[_msg]\""
+    /// depending on other settings, may print something like:
+    /// 14:21:15 [INFO] main: "Hello world!"
+    /// If level is none, it will set all levels
     pub fn set_format_text(&mut self, format_text: &'static str, level: Option<LevelFilter>) -> &mut ConfigBuilder {
         if let Some(level) = level {
             self.0.format_text[level as usize] = format_text;
@@ -122,6 +153,11 @@ impl ConfigBuilder {
         self
     }
 
+    /// Sets background color
+    /// If color is none, background will not be colored
+    /// If level is none, it will set all levels
+    /// If level is some, it will set only that level
+    /// Background color is used only if `enabled_colors` is true
     pub fn set_background_color(&mut self, background_color: Option<Color>, level: Option<LevelFilter>) -> &mut ConfigBuilder {
         if let Some(level) = level {
             self.0.background_color[level as usize] = background_color;
@@ -131,25 +167,37 @@ impl ConfigBuilder {
         self
     }
 
-    pub fn set_foreground_color(&mut self, foreground_color: Option<Color>, level: Option<LevelFilter>) -> &mut ConfigBuilder {
+    /// Sets text color
+    /// If color is none, text will be invisible
+    /// If level is none, it will set all levels
+    /// If level is some, it will set only that level
+    /// Background color is used only if `enabled_colors` is true
+    pub fn set_colored_text_color(&mut self, colored_text_color: Option<Color>, level: Option<LevelFilter>) -> &mut ConfigBuilder {
         if let Some(level) = level {
-            self.0.foreground_color[level as usize] = foreground_color;
+            self.0.colored_text_color[level as usize] = colored_text_color;
         } else {
-            self.0.foreground_color = [foreground_color; LEVEL_NUMBER];
+            self.0.colored_text_color = [colored_text_color; LEVEL_NUMBER];
         }
         self
     }
 
+    /// Enables colouring of text - only works with `TermLogger`
     pub fn set_enabled_colours(&mut self, enabled_colours: bool) -> &mut ConfigBuilder {
         self.0.enabled_colors = enabled_colours;
         self
     }
 
+    /// Sets the level of the logger.
+    /// E.g. using `LevelFilter::Info` will print all logs with level `Info`, `Warn`, `Error`,
+    /// but not `Debug` or `Trace`.
     pub fn set_level(&mut self, level: LevelFilter) -> &mut ConfigBuilder {
         self.0.level = level;
         self
     }
 
+    /// Set time format used in logger
+    /// If level is none, it will set all levels
+    /// Time format can be predefined(Rfc2822 or Rfc3339) or custom
     pub fn set_time_format(&mut self, time_format: TimeFormat, level: Option<LevelFilter>) -> &mut ConfigBuilder {
         if let Some(level) = level {
             self.0.time_format[level as usize] = time_format;
@@ -159,6 +207,7 @@ impl ConfigBuilder {
         self
     }
 
+    /// Manually sets the offset used for the time.
     pub fn set_time_offset(&mut self, offset: UtcOffset) -> &mut ConfigBuilder {
         self.0.time_offset = offset;
         self
@@ -195,11 +244,9 @@ impl ConfigBuilder {
         }
     }
 
+    /// Builds the config
     pub fn build(&mut self) -> Config {
-        let mut cloned_config = self.0.clone();
-        cloned_config.calculate_tokens();
-        cloned_config.calculate_colors();
-        cloned_config
+        self.0.clone()
     }
 }
 
@@ -217,8 +264,8 @@ impl Default for Config {
             time_offset: UtcOffset::UTC,
 
             tokens: [vec![], vec![], vec![], vec![], vec![], vec![]],
-            foreground_color: [
-                None,                // Default foreground
+            colored_text_color: [
+                None,
                 Some(Color::Red),    // Error
                 Some(Color::Yellow), // Warn
                 Some(Color::Blue),   // Info
@@ -240,8 +287,9 @@ mod tests {
 
     #[test]
     fn test() {
-        let text = "[_time] [_level] [_thread] [_module] [_file] [_line] [_color_start][_msg][_color_end] [RAR]";
-        let config = ConfigBuilder::new().set_format_text(text, None).build();
+        let text = "[_time] [_level] [_thread] [_module] [_file][_file_name] [_line] [_color_start][_msg][_color_end] [RAR]";
+        let mut config = ConfigBuilder::new().set_format_text(text, None).build();
+        config.calculate_data();
         assert_eq!(
             config.tokens[0],
             vec![
@@ -254,6 +302,7 @@ mod tests {
                 Token::Module,
                 Token::Text(" "),
                 Token::File,
+                Token::FileName,
                 Token::Text(" "),
                 Token::Line,
                 Token::Text(" "),
@@ -265,23 +314,28 @@ mod tests {
         );
 
         let text = "]]][[";
-        let config = ConfigBuilder::new().set_format_text(text, None).build();
+        let mut config = ConfigBuilder::new().set_format_text(text, None).build();
+        config.calculate_data();
         assert_eq!(config.tokens[0], vec![Token::Text("]]][[")]);
 
         let text = " [_time]";
-        let config = ConfigBuilder::new().set_format_text(text, None).build();
+        let mut config = ConfigBuilder::new().set_format_text(text, None).build();
+        config.calculate_data();
         assert_eq!(config.tokens[0], vec![Token::Text(" "), Token::Time]);
 
         let text = "[_time]";
-        let config = ConfigBuilder::new().set_format_text(text, None).build();
+        let mut config = ConfigBuilder::new().set_format_text(text, None).build();
+        config.calculate_data();
         assert_eq!(config.tokens[0], vec![Token::Time]);
 
         let text = "[_time] ";
-        let config = ConfigBuilder::new().set_format_text(text, None).build();
+        let mut config = ConfigBuilder::new().set_format_text(text, None).build();
+        config.calculate_data();
         assert_eq!(config.tokens[0], vec![Token::Time, Token::Text(" ")]);
 
         let text = "";
-        let config = ConfigBuilder::new().set_format_text(text, None).build();
+        let mut config = ConfigBuilder::new().set_format_text(text, None).build();
+        config.calculate_data();
         assert_eq!(config.tokens[0], vec![]);
     }
 }

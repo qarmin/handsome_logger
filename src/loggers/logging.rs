@@ -19,6 +19,7 @@ where
             Token::Thread => write!(write, "{:?}", thread::current().id())?,
             Token::Module => write!(write, "{}", record.module_path().unwrap_or("<unknown>"))?,
             Token::File => write!(write, "{}", record.file().unwrap_or("<unknown>"))?,
+            Token::FileName => write_file_name(record, write)?,
             Token::Line => write!(write, "{}", record.line().unwrap_or(0))?,
             Token::Text(text) => write!(write, "{text}")?,
             Token::Message => write_args(record, write)?,
@@ -39,6 +40,7 @@ pub fn try_log_term(config: &Config, record: &Record<'_>, write: &mut BufferedSt
             Token::Thread => write!(write, "{:?}", thread::current().id())?,
             Token::Module => write!(write, "{}", record.module_path().unwrap_or("<unknown>"))?,
             Token::File => write!(write, "{}", record.file().unwrap_or("<unknown>"))?,
+            Token::FileName => write_file_name(record, write)?,
             Token::Line => write!(write, "{}", record.line().unwrap_or(0))?,
             Token::Text(text) => write!(write, "{text}")?,
             Token::Message => write_args(record, write)?,
@@ -54,6 +56,25 @@ pub fn try_log_term(config: &Config, record: &Record<'_>, write: &mut BufferedSt
     // themselves on the way out, so to avoid the Case of the Missing 8k,
     // flush each entry.
     write.flush()
+}
+
+#[inline(always)]
+pub fn write_file_name<W>(record: &Record<'_>, write: &mut W) -> Result<(), Error>
+where
+    W: Write + Sized,
+{
+    match record.file() {
+        Some(file) => {
+            let mut file = file.rsplitn(2, '/');
+            if let Some(file) = file.next() {
+                write!(write, "{file}")?;
+            } else {
+                write!(write, "<unknown>")?;
+            }
+        }
+        None => write!(write, "<unknown>")?,
+    }
+    Ok(())
 }
 
 #[inline(always)]
@@ -117,12 +138,22 @@ mod tests {
     fn test_tokens_output() {
         let mut config = ConfigBuilder::new().build();
         let record = Record::builder().build();
-        let i = vec![Token::File, Token::Level, Token::Module, Token::Line, Token::Text("test")];
+        let i = vec![
+            Token::File,
+            Token::Level,
+            Token::Module,
+            Token::Line,
+            Token::FileName,
+            Token::ColorEnd,
+            Token::ColorStart,
+            Token::Message,
+            Token::Text("test"),
+        ];
         config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i.clone()];
         let mut res_vec = Vec::new();
         let res = try_log(&config, &record, &mut res_vec);
         assert!(res.is_ok());
-        assert_eq!(String::from_utf8(res_vec).unwrap(), "<unknown>INFO<unknown>0test\n".to_string());
+        assert_eq!(String::from_utf8(res_vec).unwrap(), "<unknown>INFO<unknown>0<unknown>test\n".to_string());
 
         let mut config = ConfigBuilder::new().build();
         let record = Record::builder().build();

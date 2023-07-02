@@ -7,7 +7,7 @@ fn main() {
         .set_format_text("[_msg] [_color_start][[_level]][_color_end], module [_module], line [_line]", None)
         .build();
     let write_config = ConfigBuilder::new()
-        .set_format_text("[_level] [_msg] [_module]:[_line]", None)
+        .set_format_text("[[_level]] \"[_msg]\" [[_module]] - [_file_name]:[_line]", None)
         .set_level(LevelFilter::Trace)
         .build();
 
@@ -26,13 +26,13 @@ fn main() {
 
 // Output in terminal:
 //
-// Got INFO [INFO], module terminal_and_file_logging, line 21
-// Got WARNING [WARN], module terminal_and_file_logging, line 22
-// Got ERROR [ERROR], module terminal_and_file_logging, line 23
+// Got INFO [INFO], module terminal_and_file_logging, line 22
+// Got WARNING [WARN], module terminal_and_file_logging, line 23
+// Got ERROR [ERROR], module terminal_and_file_logging, line 24
 
 // Output in my_rust_binary.log
-// [TRACE] Got TRACE terminal_and_file_logging:19
-// [DEBUG] Got DEBUG terminal_and_file_logging:20
-// [INFO] Got INFO terminal_and_file_logging:21
-// [WARN] Got WARNING terminal_and_file_logging:22
-// [ERROR] Got ERROR terminal_and_file_logging:23
+// [TRACE] "Got TRACE" [terminal_and_file_logging] - terminal_and_file_logging.rs:20
+// [DEBUG] "Got DEBUG" [terminal_and_file_logging] - terminal_and_file_logging.rs:21
+// [INFO] "Got INFO" [terminal_and_file_logging] - terminal_and_file_logging.rs:22
+// [WARN] "Got WARNING" [terminal_and_file_logging] - terminal_and_file_logging.rs:23
+// [ERROR] "Got ERROR" [terminal_and_file_logging] - terminal_and_file_logging.rs:24

@@ -52,7 +52,7 @@ impl TermLogger {
             },
         };
 
-        config.calculate_tokens();
+        config.calculate_data();
 
         Box::new(TermLogger {
             level: config.level,

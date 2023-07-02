@@ -21,7 +21,7 @@ impl SimpleLogger {
 
     #[must_use]
     pub fn new(log_level: LevelFilter, mut config: Config) -> Box<SimpleLogger> {
-        config.calculate_tokens();
+        config.calculate_data();
 
         Box::new(SimpleLogger {
             level: log_level,

@@ -1,26 +1,39 @@
 # Handsome Logger
 
-Handsome logger aims to be quite simple and quite powerful.
+Handsome logger aims to be fast, easy to use and configurable logger.
 
 This is a fork of [simplelog.rs](https://github.com/Drakulix/simplelog.rs) from commit `70f4dcb6c20de819b68a4c52988e850403f779db` and is available under same license as the original project.
 
 I created it because the formatting possibilities of this library were insufficient for me and the changes that would have to be made to it to "fix" it were too big.
 
-## Features
-- Colored output - at least colored is `[INFO]`, `[DEBUG]`, `[WARN]`, `[TRACE]` and `[ERROR]`
-- Saving both to file and terminal
-- Customizable format - place where each field is added can be easily modified
-- Multiple properties - thread id, module name, file name, line number, timestamp
+![Example](https://github.com/qarmin/handsome_logger/assets/41945903/f409c771-abb5-47dd-acfe-0aa385475591)
 
+## Features
+- Multiple loggers - SimpleLogger(simplest and the stablest), TermLogger(SimpleLogger + colored output), WriteLogger(can save logs to file), CombinedLogger(can combine multiple loggers and save logs, both to file and to terminal)
+- Customizable format - each element, like timestamp or module name, log level, can be customized
+- Colored output - you can colorize any part of log message
+- Simple to use - library can be easily configured in few lines of code for most use cases
+- Multiple log message formatters(you can use them more than once - nobody can stop you):
+```
+[_line] - prints line of code where log was called or 0 if cannot read line
+[_file] - prints full project path to file where log was called if is inside repository of full path if is outside, or "<unknown>" if cannot read file path
+[_file_name] - prints file name where log was called or "<unknown>" if cannot read file name
+[_module] - prints module name where log was called or "<unknown>" if cannot read module name
+[_msg] - prints user log message
+[_time] - prints time of logged message
+[_level] - prints log level (INFO, DEBUG, etc.)
+[_thread] - prints thread id
+[_color_start], [_color_end] - starts and ends colorization of log message
+```
 ## Example Usage
 First add to Cargo.toml, this two lines
 ```
-handsome_logger = "0.1"
+handsome_logger = "0.2"
 log = "0.4"
 ```
-```
-use handsome_logger::{ColorChoice, CombinedLogger, ConfigBuilder, TermLogger};
-use log::{error, info, debug, trace, warn};
+```rust
+use handsome_logger::{ColorChoice, Config, TermLogger, TerminalMode};
+use log::*;
 
 fn main() {
     TermLogger::init(Config::default(), TerminalMode::Mixed, ColorChoice::Auto).unwrap();
@@ -34,24 +47,12 @@ fn main() {
 ```
 should print
 ```
-17:38:18 [DEBUG] [project:14] Got DEBUG
-17:38:18 [INFO] [project:15] Got INFO
-17:38:18 [WARN] [project:16] Got WARNING
-17:38:18 [ERROR] [project:17] Got ERROR
+21:20:22 [INFO] terminal_logging: Got INFO
+21:20:22 [WARN] terminal_logging: Got WARNING
+21:20:22 [ERROR] terminal_logging: Got ERROR
 ```
-## Why?
-Recently I needed to use logger in my project, but I found that tested loggers not have all required features that I need:
-- Formatting is simple - both env_logger and simplelog are simple to use, but for users may be a little hard to modify
-- Save data in different format to file and to terminal
-- Have colourful output - without it is hard to read logs
 
-## TODO 
-- Add more tests
-- Set minimal required version of rust(currently only latest rust version is supported)
-- Add more documentations
-- Add more examples
-- Add handling of default environment variables like env_logger
-- Add filtering options
+for more, see examples folder
 
 ## License 
 Apache 2.0 or MIT, at your option.

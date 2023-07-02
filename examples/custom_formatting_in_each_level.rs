@@ -1,12 +1,14 @@
-use handsome_logger::{ColorChoice, ConfigBuilder, TermLogger, TerminalMode};
+use handsome_logger::{Color, ColorChoice, ConfigBuilder, TermLogger, TerminalMode};
 use log::*;
 
 fn main() {
     let term_config = ConfigBuilder::new()
-        .set_format_text("[_level] [_msg]", None)
-        .set_format_text("[_level] [_msg] [_module]", Some(LevelFilter::Debug))
-        .set_format_text("[_color_start][_level] [_msg] [_module]:[_line][_color_end]", Some(LevelFilter::Error))
-        .set_format_text("[_level] [_msg] [_module]:[_line] [_file]", Some(LevelFilter::Trace))
+        .set_background_color(Some(Color::Green), Some(LevelFilter::Trace))
+        .set_colored_text_color(Some(Color::Rgb(255, 255, 255)), Some(LevelFilter::Trace))
+        .set_format_text("[[_level]] [_color_start][_msg][_color_end]", None)
+        .set_format_text("[[_level]] [_color_start][_msg][_color_end] [_module]", Some(LevelFilter::Debug))
+        .set_format_text("[_color_start][[_level]] [_msg] [_module]:[_line][_color_end]", Some(LevelFilter::Error))
+        .set_format_text("[[_level]] [_msg] [_module]:[_line] [_color_start][_file][_color_end]", Some(LevelFilter::Trace))
         .set_level(LevelFilter::Trace)
         .build();
 
