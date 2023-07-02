@@ -24,12 +24,19 @@ jobs:
           cargo fmt -- --check
         if: ${{ matrix.type == 'stable' }}
 
-      - name: Clippy check
+      - name: Cargo check
         run: |
           cargo check
           cargo check --all-features
           cargo check --no-default-features --features "time-local-offset"
           cargo check --no-default-features --features "chrono-local-offset"
+
+      - name: Cargo check examples
+        run: |
+          cargo check --examples
+          cargo check --examples --all-features
+          cargo check --examples --no-default-features --features "time-local-offset"
+          cargo check --examples --no-default-features --features "chrono-local-offset"
 
       - name: Clippy pedantic
         run: |

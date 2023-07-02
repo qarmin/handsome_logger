@@ -62,6 +62,6 @@ Recently I needed to use logger in my project, but I found that tested loggers n
 ## License 
 Apache 2.0 or MIT, at your option.
 
-Copyright (c) 2023 Rafał Mikrut
+Copyright (c) 2023 Rafał Mikrut  
 Copyright (c) 2015-2023 Victor Brekenfeld and contributors(for full list see https://github.com/Drakulix/simplelog.rs/graphs/contributors)
 

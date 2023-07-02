@@ -43,7 +43,7 @@ pub fn try_log_term(config: &Config, record: &Record<'_>, write: &mut BufferedSt
             Token::Message => write_args(record, write)?,
         }
     }
-    write!(write, "")?;
+    writeln!(write)?;
 
     // The log crate holds the logger as a `static mut`, which isn't dropped
     // at program exit: https://doc.rust-lang.org/reference/items/static-items.html
@@ -100,7 +100,7 @@ pub fn write_args<W>(record: &Record<'_>, write: &mut W) -> Result<(), Error>
 where
     W: Write + Sized,
 {
-    writeln!(write, "{}", record.args())?;
+    write!(write, "{}", record.args())?;
     Ok(())
 }
 

@@ -2,7 +2,7 @@ use log::Log;
 pub use log::{Level, LevelFilter};
 pub use termcolor::{Color, ColorChoice};
 
-pub use self::config::{format_description, Config, ConfigBuilder, FormatItem};
+pub use self::config::{format_description, Config, ConfigBuilder, FormatItem, TimeFormat};
 pub use self::loggers::{CombinedLogger, SimpleLogger, TermLogger, TerminalMode, WriteLogger};
 
 mod config;
