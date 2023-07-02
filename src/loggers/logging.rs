@@ -2,7 +2,7 @@ use std::io::{Error, Write};
 use std::thread;
 
 use log::Record;
-use termcolor::{BufferedStandardStream, ColorSpec, WriteColor};
+use termcolor::{BufferedStandardStream, WriteColor};
 
 use crate::config::{TimeFormat, Token};
 use crate::Config;
@@ -15,13 +15,14 @@ where
     for token in &config.tokens[record.level() as usize] {
         match token {
             Token::Time => write_time(write, config, record)?,
-            Token::Level => write!(write, "[{}]", record.level())?,
+            Token::Level => write!(write, "{}", record.level())?,
             Token::Thread => write!(write, "{:?}", thread::current().id())?,
             Token::Module => write!(write, "{}", record.module_path().unwrap_or("<unknown>"))?,
             Token::File => write!(write, "{}", record.file().unwrap_or("<unknown>"))?,
             Token::Line => write!(write, "{}", record.line().unwrap_or(0))?,
             Token::Text(text) => write!(write, "{text}")?,
             Token::Message => write_args(record, write)?,
+            Token::ColorStart | Token::ColorEnd => {}
         }
     }
     writeln!(write)?;
@@ -34,13 +35,15 @@ pub fn try_log_term(config: &Config, record: &Record<'_>, write: &mut BufferedSt
     for token in &config.tokens[record.level() as usize] {
         match token {
             Token::Time => write_time(write, config, record)?,
-            Token::Level => write_level(write, config, record)?,
+            Token::Level => write!(write, "{}", record.level())?,
             Token::Thread => write!(write, "{:?}", thread::current().id())?,
             Token::Module => write!(write, "{}", record.module_path().unwrap_or("<unknown>"))?,
             Token::File => write!(write, "{}", record.file().unwrap_or("<unknown>"))?,
             Token::Line => write!(write, "{}", record.line().unwrap_or(0))?,
             Token::Text(text) => write!(write, "{text}")?,
             Token::Message => write_args(record, write)?,
+            Token::ColorStart => set_color(write, config, record, true)?,
+            Token::ColorEnd => set_color(write, config, record, false)?,
         }
     }
     writeln!(write)?;
@@ -78,18 +81,14 @@ where
 }
 
 #[inline(always)]
-pub fn write_level(write: &mut BufferedStandardStream, config: &Config, record: &Record<'_>) -> Result<(), Error> {
-    let color = config.level_color[record.level() as usize];
+pub fn set_color(write: &mut BufferedStandardStream, config: &Config, record: &Record<'_>, color_start: bool) -> Result<(), Error> {
     if config.enabled_colors {
-        write.set_color(ColorSpec::new().set_fg(color))?;
-    }
-
-    let level = format!("[{}]", record.level());
-
-    write!(write, "{level}")?;
-
-    if config.enabled_colors {
-        write.reset()?;
+        if color_start {
+            let color = &config.compiled_colors[record.level() as usize];
+            write.set_color(color)?;
+        } else {
+            write.reset()?;
+        }
     }
 
     Ok(())
@@ -123,7 +122,7 @@ mod tests {
         let mut res_vec = Vec::new();
         let res = try_log(&config, &record, &mut res_vec);
         assert!(res.is_ok());
-        assert_eq!(String::from_utf8(res_vec).unwrap(), "<unknown>[INFO]<unknown>0test\n".to_string());
+        assert_eq!(String::from_utf8(res_vec).unwrap(), "<unknown>INFO<unknown>0test\n".to_string());
 
         let mut config = ConfigBuilder::new().build();
         let record = Record::builder().build();

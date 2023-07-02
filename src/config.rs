@@ -1,8 +1,10 @@
 use log::LevelFilter;
-use termcolor::Color;
+use termcolor::{Color, ColorSpec};
 pub use time::format_description::FormatItem;
 pub use time::macros::format_description;
 pub use time::UtcOffset;
+
+const LEVEL_NUMBER: usize = 6;
 
 #[derive(Debug, Clone, Copy)]
 pub enum TimeFormat {
@@ -16,6 +18,8 @@ pub enum Token {
     Text(&'static str),
     Time,
     Level,
+    ColorStart,
+    ColorEnd,
     Thread,
     Module,
     File,
@@ -28,22 +32,33 @@ pub struct Config {
     pub(crate) level: LevelFilter,
     pub(crate) time_offset: UtcOffset,
 
-    pub(crate) time_format: [TimeFormat; 6],
-    pub(crate) format_text: [&'static str; 6],
-    pub(crate) tokens: [Vec<Token>; 6],
+    pub(crate) time_format: [TimeFormat; LEVEL_NUMBER],
+    pub(crate) format_text: [&'static str; LEVEL_NUMBER],
+    pub(crate) tokens: [Vec<Token>; LEVEL_NUMBER],
 
-    pub(crate) level_color: [Option<Color>; 6],
+    // Colors
+    pub(crate) foreground_color: [Option<Color>; LEVEL_NUMBER],
+    pub(crate) background_color: [Option<Color>; LEVEL_NUMBER],
+    pub(crate) compiled_colors: [ColorSpec; LEVEL_NUMBER],
     pub(crate) enabled_colors: bool,
 }
 
-const DEFAULT_FORMAT_TEXT: &str = "[_time] [_level] [[_module]:[_line]] [_msg]";
+const DEFAULT_FORMAT_TEXT: &str = "[_time] [_color_start][[_level]][_color_end] [[_module]:[_line]] [_msg]";
 
 impl Config {
+    pub fn calculate_colors(&mut self) {
+        for (idx, color_spec) in self.compiled_colors.iter_mut().enumerate() {
+            *color_spec = ColorSpec::new().set_bg(self.background_color[idx]).set_fg(self.foreground_color[idx]).clone();
+        }
+    }
+
     /// Calculate tokens from format text
     pub(crate) fn calculate_tokens(&mut self) {
         let allowed_tokens = [
             ("[_time]", Token::Time),
             ("[_level]", Token::Level),
+            ("[_color_start]", Token::ColorStart),
+            ("[_color_end]", Token::ColorEnd),
             ("[_thread]", Token::Thread),
             ("[_module]", Token::Module),
             ("[_file]", Token::File),
@@ -102,7 +117,25 @@ impl ConfigBuilder {
         if let Some(level) = level {
             self.0.format_text[level as usize] = format_text;
         } else {
-            self.0.format_text = [format_text; 6];
+            self.0.format_text = [format_text; LEVEL_NUMBER];
+        }
+        self
+    }
+
+    pub fn set_background_color(&mut self, background_color: Option<Color>, level: Option<LevelFilter>) -> &mut ConfigBuilder {
+        if let Some(level) = level {
+            self.0.background_color[level as usize] = background_color;
+        } else {
+            self.0.background_color = [background_color; LEVEL_NUMBER];
+        }
+        self
+    }
+
+    pub fn set_foreground_color(&mut self, foreground_color: Option<Color>, level: Option<LevelFilter>) -> &mut ConfigBuilder {
+        if let Some(level) = level {
+            self.0.foreground_color[level as usize] = foreground_color;
+        } else {
+            self.0.foreground_color = [foreground_color; LEVEL_NUMBER];
         }
         self
     }
@@ -121,7 +154,7 @@ impl ConfigBuilder {
         if let Some(level) = level {
             self.0.time_format[level as usize] = time_format;
         } else {
-            self.0.time_format = [time_format; 6];
+            self.0.time_format = [time_format; LEVEL_NUMBER];
         }
         self
     }
@@ -165,6 +198,7 @@ impl ConfigBuilder {
     pub fn build(&mut self) -> Config {
         let mut cloned_config = self.0.clone();
         cloned_config.calculate_tokens();
+        cloned_config.calculate_colors();
         cloned_config
     }
 }
@@ -179,11 +213,11 @@ impl Default for Config {
     fn default() -> Config {
         Config {
             level: LevelFilter::Info,
-            time_format: [TimeFormat::Custom(format_description!("[hour]:[minute]:[second]")); 6],
+            time_format: [TimeFormat::Custom(format_description!("[hour]:[minute]:[second]")); LEVEL_NUMBER],
             time_offset: UtcOffset::UTC,
 
             tokens: [vec![], vec![], vec![], vec![], vec![], vec![]],
-            level_color: [
+            foreground_color: [
                 None,                // Default foreground
                 Some(Color::Red),    // Error
                 Some(Color::Yellow), // Warn
@@ -192,8 +226,10 @@ impl Default for Config {
                 Some(Color::White),  // Trace
             ],
 
+            background_color: [None, None, None, None, None, None],
             enabled_colors: true,
-            format_text: [DEFAULT_FORMAT_TEXT; 6],
+            format_text: [DEFAULT_FORMAT_TEXT; LEVEL_NUMBER],
+            compiled_colors: [ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new()],
         }
     }
 }
@@ -204,7 +240,7 @@ mod tests {
 
     #[test]
     fn test() {
-        let text = "[_time] [_level] [_thread] [_module] [_file] [_line] [_msg] [RAR]";
+        let text = "[_time] [_level] [_thread] [_module] [_file] [_line] [_color_start][_msg][_color_end] [RAR]";
         let config = ConfigBuilder::new().set_format_text(text, None).build();
         assert_eq!(
             config.tokens[0],
@@ -221,7 +257,9 @@ mod tests {
                 Token::Text(" "),
                 Token::Line,
                 Token::Text(" "),
+                Token::ColorStart,
                 Token::Message,
+                Token::ColorEnd,
                 Token::Text(" [RAR]"),
             ]
         );

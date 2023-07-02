@@ -20,16 +20,10 @@ log = "0.4"
 ```
 ```
 use handsome_logger::{ColorChoice, CombinedLogger, ConfigBuilder, TermLogger};
-use log::{error, info,debug, trace, warn};
+use log::{error, info, debug, trace, warn};
 
 fn main() {
-    let config = ConfigBuilder::default().set_level(handsome_logger::LevelFilter::Debug).build();
-
-    TermLogger::init(
-        config,
-        handsome_logger::TerminalMode::Mixed, // Save results to stderr or stdout?
-        ColorChoice::Auto,
-    ).unwrap();
+    TermLogger::init(Config::default(), TerminalMode::Mixed, ColorChoice::Auto).unwrap();
 
     trace!("Got TRACE");
     debug!("Got DEBUG");

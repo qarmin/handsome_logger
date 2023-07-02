@@ -5,7 +5,7 @@ fn main() {
     let term_config = ConfigBuilder::new()
         .set_format_text("[_level] [_msg]", None)
         .set_format_text("[_level] [_msg] [_module]", Some(LevelFilter::Debug))
-        .set_format_text("[_level] [_msg] [_module]:[_line]", Some(LevelFilter::Error))
+        .set_format_text("[_color_start][_level] [_msg] [_module]:[_line][_color_end]", Some(LevelFilter::Error))
         .set_format_text("[_level] [_msg] [_module]:[_line] [_file]", Some(LevelFilter::Trace))
         .set_level(LevelFilter::Trace)
         .build();

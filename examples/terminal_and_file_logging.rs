@@ -3,7 +3,9 @@ use log::*;
 use std::fs::File;
 
 fn main() {
-    let term_config = ConfigBuilder::new().set_format_text("[_msg] [_level], module [_module], line [_line]", None).build();
+    let term_config = ConfigBuilder::new()
+        .set_format_text("[_msg] [_color_start][[_level]][_color_end], module [_module], line [_line]", None)
+        .build();
     let write_config = ConfigBuilder::new()
         .set_format_text("[_level] [_msg] [_module]:[_line]", None)
         .set_level(LevelFilter::Trace)
