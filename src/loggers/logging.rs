@@ -1,5 +1,5 @@
 use std::io::{Error, Write};
-use std::thread;
+use std::{process, thread};
 
 use log::Record;
 use termcolor::{BufferedStandardStream, WriteColor};
@@ -16,7 +16,9 @@ where
         match token {
             Token::Time => write_time(write, config, record)?,
             Token::Level => write!(write, "{}", record.level())?,
-            Token::Thread => write!(write, "{:?}", thread::current().id())?,
+            Token::ThreadId => write_thread_id(write)?,
+            Token::ThreadName => write_thread_name(write)?,
+            Token::ProcessId => write!(write, "{}", process::id())?,
             Token::Module => write!(write, "{}", record.module_path().unwrap_or("<unknown>"))?,
             Token::File => write!(write, "{}", record.file().unwrap_or("<unknown>"))?,
             Token::FileName => write_file_name(record, write)?,
@@ -37,7 +39,9 @@ pub fn try_log_term(config: &Config, record: &Record<'_>, write: &mut BufferedSt
         match token {
             Token::Time => write_time(write, config, record)?,
             Token::Level => write!(write, "{}", record.level())?,
-            Token::Thread => write!(write, "{:?}", thread::current().id())?,
+            Token::ThreadId => write_thread_id(write)?,
+            Token::ThreadName => write_thread_name(write)?,
+            Token::ProcessId => write!(write, "{}", process::id())?,
             Token::Module => write!(write, "{}", record.module_path().unwrap_or("<unknown>"))?,
             Token::File => write!(write, "{}", record.file().unwrap_or("<unknown>"))?,
             Token::FileName => write_file_name(record, write)?,
@@ -56,6 +60,31 @@ pub fn try_log_term(config: &Config, record: &Record<'_>, write: &mut BufferedSt
     // themselves on the way out, so to avoid the Case of the Missing 8k,
     // flush each entry.
     write.flush()
+}
+
+#[inline(always)]
+pub fn write_thread_id<W>(write: &mut W) -> Result<(), Error>
+where
+    W: Write + Sized,
+{
+    // TODO, change this to simple `thread::current().id().as_u64()` when will be stabilized
+    let thread_id_string = format!("{:?}", thread::current().id()).replace("ThreadId(", "").replace(')', "");
+    write!(write, "{thread_id_string}")?;
+
+    Ok(())
+}
+
+#[inline(always)]
+pub fn write_thread_name<W>(write: &mut W) -> Result<(), Error>
+where
+    W: Write + Sized,
+{
+    match thread::current().name() {
+        Some(thread_name) => write!(write, "{thread_name}")?,
+        None => write!(write, "<unknown>")?,
+    }
+
+    Ok(())
 }
 
 #[inline(always)]
@@ -140,12 +169,21 @@ mod tests {
         let record = Record::builder().build();
         let i = vec![
             Token::File,
+            Token::Text(" "),
             Token::Level,
+            Token::Text(" "),
             Token::Module,
+            Token::Text(" "),
             Token::Line,
+            Token::Text(" "),
             Token::FileName,
+            Token::Text(" "),
             Token::ColorEnd,
+            Token::Text(" "),
             Token::ColorStart,
+            Token::Text(" "),
+            Token::ThreadName,
+            Token::Text(" "),
             Token::Message,
             Token::Text("test"),
         ];
@@ -153,7 +191,32 @@ mod tests {
         let mut res_vec = Vec::new();
         let res = try_log(&config, &record, &mut res_vec);
         assert!(res.is_ok());
-        assert_eq!(String::from_utf8(res_vec).unwrap(), "<unknown>INFO<unknown>0<unknown>test\n".to_string());
+        assert_eq!(
+            String::from_utf8(res_vec).unwrap(),
+            "<unknown> INFO <unknown> 0 <unknown>   loggers::logging::tests::test_tokens_output test\n".to_string()
+        );
+
+        let mut config = ConfigBuilder::new().build();
+        let record = Record::builder().build();
+        let i = vec![Token::ThreadId];
+        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i.clone()];
+        let mut res_vec = Vec::new();
+        let res = try_log(&config, &record, &mut res_vec);
+        assert!(res.is_ok());
+        let mut ret = String::from_utf8(res_vec.clone()).unwrap();
+        ret.pop().unwrap();
+        assert!(ret.parse::<u32>().is_ok());
+
+        let mut config = ConfigBuilder::new().build();
+        let record = Record::builder().build();
+        let i = vec![Token::ProcessId];
+        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i.clone()];
+        let mut res_vec = Vec::new();
+        let res = try_log(&config, &record, &mut res_vec);
+        assert!(res.is_ok());
+        let mut ret = String::from_utf8(res_vec.clone()).unwrap();
+        ret.pop().unwrap();
+        assert!(ret.parse::<u32>().is_ok());
 
         let mut config = ConfigBuilder::new().build();
         let record = Record::builder().build();

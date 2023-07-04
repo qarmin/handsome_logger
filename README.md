@@ -22,7 +22,9 @@ I created it because the formatting possibilities of this library were insuffici
 [_msg] - prints user log message
 [_time] - prints time of logged message
 [_level] - prints log level (INFO, DEBUG, etc.)
-[_thread] - prints thread id
+[_thread_id] - prints thread id
+[_thread_name] - prints thread name
+[_process_id] - prints process id
 [_color_start], [_color_end] - starts and ends colorization of log message
 ```
 ## Example Usage

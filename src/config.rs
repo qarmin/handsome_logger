@@ -20,7 +20,9 @@ pub enum Token {
     Level,
     ColorStart,
     ColorEnd,
-    Thread,
+    ThreadId,
+    ThreadName,
+    ProcessId,
     Module,
     FileName,
     File,
@@ -70,7 +72,9 @@ impl Config {
             ("[_level]", Token::Level),
             ("[_color_start]", Token::ColorStart),
             ("[_color_end]", Token::ColorEnd),
-            ("[_thread]", Token::Thread),
+            ("[_thread_id]", Token::ThreadId),
+            ("[_thread_name]", Token::ThreadName),
+            ("[_process_id]", Token::ProcessId),
             ("[_module]", Token::Module),
             ("[_file]", Token::File),
             ("[_file_name]", Token::FileName),
@@ -287,7 +291,7 @@ mod tests {
 
     #[test]
     fn test() {
-        let text = "[_time] [_level] [_thread] [_module] [_file][_file_name] [_line] [_color_start][_msg][_color_end] [RAR]";
+        let text = "[_time] [_level] [_thread_id] [_thread_name] [_process_id] [_module] [_file][_file_name] [_line] [_color_start][_msg][_color_end] [RAR]";
         let mut config = ConfigBuilder::new().set_format_text(text, None).build();
         config.calculate_data();
         assert_eq!(
@@ -297,7 +301,11 @@ mod tests {
                 Token::Text(" "),
                 Token::Level,
                 Token::Text(" "),
-                Token::Thread,
+                Token::ThreadId,
+                Token::Text(" "),
+                Token::ThreadName,
+                Token::Text(" "),
+                Token::ProcessId,
                 Token::Text(" "),
                 Token::Module,
                 Token::Text(" "),
