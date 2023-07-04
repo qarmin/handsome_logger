@@ -14,6 +14,6 @@ fn main() {
 
 // Output in terminal:
 //
-// 2023-07-02 20:53:08.830 [INFO] [terminal_logging_preset] terminal_logging_preset.rs:10 - Got INFO
-// 2023-07-02 20:53:08.830 [WARN] [terminal_logging_preset] terminal_logging_preset.rs:11 - Got WARNING
-// 2023-07-02 20:53:08.830 [ERROR] [terminal_logging_preset] terminal_logging_preset.rs:12 - Got ERROR
+// 2023-07-04 18:41:24.451 +00 [INFO] [terminal_logging_preset] main.rs:10 - Got INFO
+// 2023-07-04 18:41:24.451 +00 [WARN] [terminal_logging_preset] main.rs:11 - Got WARNING
+// 2023-07-04 18:41:24.451 +00 [ERROR] [terminal_logging_preset] main.rs:12 - Got ERROR

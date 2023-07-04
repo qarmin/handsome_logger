@@ -31,6 +31,7 @@ fn main() {
 // Got ERROR [ERROR], module terminal_and_file_logging, line 24
 
 // Output in my_rust_binary.log
+
 // [TRACE] "Got TRACE" [terminal_and_file_logging] - terminal_and_file_logging.rs:20
 // [DEBUG] "Got DEBUG" [terminal_and_file_logging] - terminal_and_file_logging.rs:21
 // [INFO] "Got INFO" [terminal_and_file_logging] - terminal_and_file_logging.rs:22

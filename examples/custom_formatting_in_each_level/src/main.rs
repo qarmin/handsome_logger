@@ -23,8 +23,8 @@ fn main() {
 
 // Output in terminal:
 //
-// [TRACE] Got TRACE custom_formatting_in_each_level:15 examples/custom_formatting_in_each_level.rs
+// [TRACE] Got TRACE custom_formatting_in_each_level:17 src/main.rs
 // [DEBUG] Got DEBUG custom_formatting_in_each_level
 // [INFO] Got INFO
 // [WARN] Got WARNING
-// [ERROR] Got ERROR custom_formatting_in_each_level:19
+// [ERROR] Got ERROR custom_formatting_in_each_level:21

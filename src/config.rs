@@ -34,6 +34,7 @@ pub enum Token {
 pub struct Config {
     pub(crate) level: LevelFilter,
     pub(crate) time_offset: UtcOffset,
+    pub(crate) write_once: bool,
 
     pub(crate) time_format: [TimeFormat; LEVEL_NUMBER],
     pub(crate) format_text: [&'static str; LEVEL_NUMBER],
@@ -199,6 +200,16 @@ impl ConfigBuilder {
         self
     }
 
+    /// Instead of writing multiple times to target, creates a buffer, writes to memory and
+    /// at the end writes only once to target
+    /// This is useful when saving to file, because allows to not split one log into multiple
+    /// files if rotating is used.
+    /// Works only with `WriteLogger`
+    pub fn set_write_once(&mut self, write_once: bool) -> &mut ConfigBuilder {
+        self.0.write_once = write_once;
+        self
+    }
+
     /// Set time format used in logger
     /// If level is none, it will set all levels
     /// Time format can be predefined(Rfc2822 or Rfc3339) or custom
@@ -264,6 +275,7 @@ impl Default for Config {
     fn default() -> Config {
         Config {
             level: LevelFilter::Info,
+            write_once: false,
             time_format: [TimeFormat::Custom(format_description!("[hour]:[minute]:[second]")); LEVEL_NUMBER],
             time_offset: UtcOffset::UTC,
 

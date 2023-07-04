@@ -3,10 +3,10 @@ use log::*;
 
 fn main() {
     let mut term_config_builder = ConfigBuilder::new();
-    #[cfg(feature = "time")]
-    let term_config = term_config_builder
+    let _term_config = term_config_builder
         .set_time_offset_to_local() // This may not work with multithreaded app, consider to check set_chrono_local_time_offset
         .unwrap();
+
     let term_config = term_config_builder
         .set_time_format(TimeFormat::Custom(format_description!("[year]::[month]::[day]  [hour]__[minute]__[second]")), None)
         .build();
@@ -22,6 +22,6 @@ fn main() {
 
 // Output in terminal:
 //
-// 2023::07::02  15__11__15 [INFO] [custom_time_format:16] Got INFO
-// 2023::07::02  15__11__15 [WARN] [custom_time_format:17] Got WARNING
-// 2023::07::02  15__11__15 [ERROR] [custom_time_format:18] Got ERROR
+// 2023::07::04  20__31__25 [INFO] custom_time_format: Got INFO
+// 2023::07::04  20__31__25 [WARN] custom_time_format: Got WARNING
+// 2023::07::04  20__31__25 [ERROR] custom_time_format: Got ERROR

@@ -30,7 +30,7 @@ I created it because the formatting possibilities of this library were insuffici
 ## Example Usage
 First add to Cargo.toml, this two lines
 ```
-handsome_logger = "0.2"
+handsome_logger = "0.3"
 log = "0.4"
 ```
 ```rust

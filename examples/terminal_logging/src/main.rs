@@ -13,6 +13,6 @@ fn main() {
 
 // Output in terminal:
 //
-// 12:47:13 [INFO] [simple_logging:9] Got INFO
-// 12:47:13 [WARN] [simple_logging:10] Got WARNING
-// 12:47:13 [ERROR] [simple_logging:11] Got ERROR
+// 18:41:01 [INFO] terminal_logging: Got INFO
+// 18:41:01 [WARN] terminal_logging: Got WARNING
+// 18:41:01 [ERROR] terminal_logging: Got ERROR

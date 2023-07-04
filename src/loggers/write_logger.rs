@@ -39,7 +39,13 @@ impl<W: Write + Send + 'static> Log for WriteLogger<W> {
     fn log(&self, record: &Record<'_>) {
         if self.enabled(record.metadata()) {
             let mut write_lock = self.writable.lock().unwrap();
-            let _ = try_log(&self.config, record, &mut *write_lock);
+            if self.config.write_once {
+                let mut buffer: Vec<u8> = Vec::new();
+                let _ = try_log(&self.config, record, &mut buffer);
+                let _ = write_lock.write_all(buffer.as_slice());
+            } else {
+                let _ = try_log(&self.config, record, &mut *write_lock);
+            }
         }
     }
 
