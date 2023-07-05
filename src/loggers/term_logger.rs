@@ -82,6 +82,12 @@ impl Log for TermLogger {
     }
 
     fn log(&self, record: &Record<'_>) {
+        if let Some(message_filtering) = &self.config.message_filtering {
+            if !message_filtering(record) {
+                return;
+            }
+        }
+
         let _ = self.try_log(record);
     }
 

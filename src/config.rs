@@ -1,4 +1,8 @@
+use core::fmt::Debug;
+use core::fmt::Formatter;
 use log::LevelFilter;
+use log::Record;
+use std::sync::Arc;
 use termcolor::{Color, ColorSpec};
 pub use time::format_description::FormatItem;
 pub use time::macros::format_description;
@@ -30,7 +34,9 @@ pub enum Token {
     Message,
 }
 
-#[derive(Debug, Clone)]
+type FilterFunction = dyn Fn(&Record) -> bool + Send + Sync;
+
+#[derive(Clone)]
 pub struct Config {
     pub(crate) level: LevelFilter,
     pub(crate) time_offset: UtcOffset,
@@ -45,6 +51,8 @@ pub struct Config {
     pub(crate) background_color: [Option<Color>; LEVEL_NUMBER],
     pub(crate) compiled_colors: [ColorSpec; LEVEL_NUMBER],
     pub(crate) enabled_colors: bool,
+
+    pub(crate) message_filtering: Option<Arc<FilterFunction>>,
 }
 
 const DEFAULT_FORMAT_TEXT: &str = "[_time] [_color_start][[_level]][_color_end] [_module]: [_msg]";
@@ -145,9 +153,9 @@ impl ConfigBuilder {
     }
 
     /// Sets format of logged message
-    /// E.g. "[_time] [[_level]] [_module] \"[_msg]\""
+    /// E.g. "\[_time\] \[\[_level\]\] \[_module\] \"\[_msg\]\""
     /// depending on other settings, may print something like:
-    /// 14:21:15 [INFO] main: "Hello world!"
+    /// 14:21:15 \[INFO\] main: "Hello world!"
     /// If level is none, it will set all levels
     pub fn set_format_text(&mut self, format_text: &'static str, level: Option<LevelFilter>) -> &mut ConfigBuilder {
         if let Some(level) = level {
@@ -259,6 +267,38 @@ impl ConfigBuilder {
         }
     }
 
+    /// Sets function that will be used to filter messages
+    /// If function returns true, message will be logged, otherwise it will be ignored
+    /// Function takes as argument function that will be filtered allowed results
+    /// If `message_filtering` is none, all messages will be logged
+    /// ```
+    /// use log::{info, Record};
+    /// use handsome_logger::{Config, ConfigBuilder};
+    ///
+    /// fn filtering_messages(record: &Record) -> bool {
+    ///     if let Some(arg) = record.args().as_str() {
+    ///         !arg.contains("E")
+    ///     } else {
+    ///         true
+    ///     }
+    /// }
+    ///
+    /// let logger = ConfigBuilder::new().set_message_filtering(Some(message_filtering)).build();
+    /// info!("Got BED"); // This will be ignored
+    /// info!("Got ANANAS"); // This will be printed
+    /// ```
+    pub fn set_message_filtering<F>(&mut self, message_filtering: Option<F>) -> &mut ConfigBuilder
+    where
+        F: Fn(&Record) -> bool + Send + Sync + 'static,
+    {
+        if let Some(message_filtering) = message_filtering {
+            self.0.message_filtering = Some(Arc::new(message_filtering));
+        } else {
+            self.0.message_filtering = None;
+        }
+        self
+    }
+
     /// Builds the config
     pub fn build(&mut self) -> Config {
         self.0.clone()
@@ -293,7 +333,25 @@ impl Default for Config {
             enabled_colors: true,
             format_text: [DEFAULT_FORMAT_TEXT; LEVEL_NUMBER],
             compiled_colors: [ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new()],
+            message_filtering: None,
         }
+    }
+}
+
+impl Debug for Config {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Config")
+            .field("level", &self.level)
+            .field("write_once", &self.write_once)
+            .field("time_format", &self.time_format)
+            .field("time_offset", &self.time_offset)
+            .field("tokens", &self.tokens)
+            .field("colored_text_color", &self.colored_text_color)
+            .field("background_color", &self.background_color)
+            .field("enabled_colors", &self.enabled_colors)
+            .field("format_text", &self.format_text)
+            .field("compiled_colors", &self.compiled_colors)
+            .finish()
     }
 }
 

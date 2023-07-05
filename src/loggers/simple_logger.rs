@@ -37,6 +37,12 @@ impl Log for SimpleLogger {
     }
 
     fn log(&self, record: &Record<'_>) {
+        if let Some(message_filtering) = &self.config.message_filtering {
+            if !message_filtering(record) {
+                return;
+            }
+        }
+
         if self.enabled(record.metadata()) {
             let _lock = self.output_lock.lock().unwrap();
 

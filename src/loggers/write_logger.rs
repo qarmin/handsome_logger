@@ -37,6 +37,12 @@ impl<W: Write + Send + 'static> Log for WriteLogger<W> {
     }
 
     fn log(&self, record: &Record<'_>) {
+        if let Some(message_filtering) = &self.config.message_filtering {
+            if !message_filtering(record) {
+                return;
+            }
+        }
+
         if self.enabled(record.metadata()) {
             let mut write_lock = self.writable.lock().unwrap();
             if self.config.write_once {

@@ -7,6 +7,8 @@ use termcolor::{BufferedStandardStream, WriteColor};
 use crate::config::{TimeFormat, Token};
 use crate::Config;
 
+/// Logging functionality for `WriteLogger` that can be used for any write target, even console.
+/// Operate on tokens, which allow to easily change position of printing item
 #[inline(always)]
 pub fn try_log<W>(config: &Config, record: &Record<'_>, write: &mut W) -> Result<(), Error>
 where
@@ -33,6 +35,9 @@ where
     Ok(())
 }
 
+/// Terminal logging functionality, that can only be used by `TermLogger`
+/// The only difference between this function and casual `try_log` is flushing at the end and
+/// using tokens `ColorStart` and `ColorEnd`, that allows to write colors into terminal
 #[inline(always)]
 pub fn try_log_term(config: &Config, record: &Record<'_>, write: &mut BufferedStandardStream) -> Result<(), Error> {
     for token in &config.tokens[record.level() as usize] {
@@ -62,6 +67,7 @@ pub fn try_log_term(config: &Config, record: &Record<'_>, write: &mut BufferedSt
     write.flush()
 }
 
+/// Writes local thread id and starts from 1
 #[inline(always)]
 pub fn write_thread_id<W>(write: &mut W) -> Result<(), Error>
 where
@@ -74,6 +80,7 @@ where
     Ok(())
 }
 
+/// Writes thread name
 #[inline(always)]
 pub fn write_thread_name<W>(write: &mut W) -> Result<(), Error>
 where
@@ -87,6 +94,8 @@ where
     Ok(())
 }
 
+/// Writes file name with its extension
+/// E.g. `file.rs`
 #[inline(always)]
 pub fn write_file_name<W>(record: &Record<'_>, write: &mut W) -> Result<(), Error>
 where
@@ -106,6 +115,7 @@ where
     Ok(())
 }
 
+/// Writes time in choosen time format
 #[inline(always)]
 pub fn write_time<W>(write: &mut W, config: &Config, record: &Record<'_>) -> Result<(), Error>
 where
@@ -130,6 +140,7 @@ where
     Ok(())
 }
 
+/// Writes color to terminal output
 #[inline(always)]
 pub fn set_color(write: &mut BufferedStandardStream, config: &Config, record: &Record<'_>, color_start: bool) -> Result<(), Error> {
     if config.enabled_colors {
@@ -144,6 +155,8 @@ pub fn set_color(write: &mut BufferedStandardStream, config: &Config, record: &R
     Ok(())
 }
 
+/// Writes args provided in time macro
+/// E.g. record.args() in info!("Print This") will contain one argument "Print This"
 #[inline(always)]
 pub fn write_args<W>(record: &Record<'_>, write: &mut W) -> Result<(), Error>
 where

@@ -4,15 +4,16 @@ Handsome logger aims to be fast, easy to use and configurable logger.
 
 This is a fork of [simplelog.rs](https://github.com/Drakulix/simplelog.rs) from commit `70f4dcb6c20de819b68a4c52988e850403f779db` and is available under same license as the original project.
 
-I created it because the formatting possibilities of this library were insufficient for me and the changes that would have to be made to it to "fix" it were too big.
+I created it because the formatting abilities of this library were insufficient for me and the changes that would have to be made to it to "fix" it were too big.
 
 ![Example](https://github.com/qarmin/handsome_logger/assets/41945903/f409c771-abb5-47dd-acfe-0aa385475591)
 
 ## Features
-- Multiple loggers - SimpleLogger(simplest and the stablest), TermLogger(SimpleLogger + colored output), WriteLogger(can save logs to file), CombinedLogger(can combine multiple loggers and save logs, both to file and to terminal)
+- Multiple loggers - SimpleLogger(simplest and the stablest), TermLogger(SimpleLogger + colored output), WriteLogger(can save logs e.g. to file), CombinedLogger(can combine multiple loggers and save logs, both to file and to terminal)
 - Customizable format - each element, like timestamp or module name, log level, can be customized
 - Colored output - you can colorize any part of log message
 - Simple to use - library can be easily configured in few lines of code for most use cases
+- Filtering messages - you can ignore any message basing on your own function
 - Multiple log message formatters(you can use them more than once - nobody can stop you):
 ```
 [_line] - prints line of code where log was called or 0 if cannot read line
@@ -54,7 +55,12 @@ should print
 21:20:22 [ERROR] terminal_logging: Got ERROR
 ```
 
-for more, see examples folder
+examples folder contains examples of
+- formatting logs
+- saving logs to file and rotating it
+- using multiple loggers
+- colouring terminal output
+- filtering messages
 
 ## License 
 Apache 2.0 or MIT, at your option.
