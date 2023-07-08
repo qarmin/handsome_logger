@@ -283,7 +283,7 @@ impl ConfigBuilder {
     ///     }
     /// }
     ///
-    /// let logger = ConfigBuilder::new().set_message_filtering(Some(message_filtering)).build();
+    /// let logger = ConfigBuilder::new().set_message_filtering(Some(filtering_messages)).build();
     /// info!("Got BED"); // This will be ignored
     /// info!("Got ANANAS"); // This will be printed
     /// ```
