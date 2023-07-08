@@ -1,5 +1,6 @@
 use core::fmt::{Debug, Formatter, Write};
 use log::{LevelFilter, Record};
+use std::io::Error;
 use std::sync::Arc;
 use termcolor::BufferedStandardStream;
 use termcolor::{Color, ColorSpec};
@@ -34,8 +35,8 @@ pub enum Token {
 }
 
 type FilterFunction = dyn Fn(&Record) -> bool + Send + Sync;
-type WriteFunction = dyn Fn(&Record, &mut dyn Write) -> bool + Send + Sync;
-type TerminalWriteFunction = dyn Fn(&Record, &mut BufferedStandardStream) -> bool + Send + Sync;
+type WriteFunction = dyn Fn(&Record, &mut dyn Write) -> Result<(), Error> + Send + Sync;
+type TerminalWriteFunction = dyn Fn(&Record, &mut BufferedStandardStream) -> Result<(), Error> + Send + Sync;
 
 #[derive(Clone)]
 pub struct Config {
@@ -308,7 +309,7 @@ impl ConfigBuilder {
     /// Function takes as argument function that will be filtered allowed results
     pub fn set_custom_write_formatter<F>(&mut self, write_formatter: Option<F>) -> &mut ConfigBuilder
     where
-        F: Fn(&Record, &mut dyn Write) -> bool + Send + Sync + 'static,
+        F: Fn(&Record, &mut dyn Write) -> Result<(), Error> + Send + Sync + 'static,
     {
         if let Some(write_formatter) = write_formatter {
             self.0.write_formatter = Some(Arc::new(write_formatter));
@@ -324,7 +325,7 @@ impl ConfigBuilder {
     /// Function takes as argument function that will be filtered allowed results
     pub fn set_custom_terminal_formatter<F>(&mut self, terminal_formatter: Option<F>) -> &mut ConfigBuilder
     where
-        F: Fn(&Record, &mut BufferedStandardStream) -> bool + Send + Sync + 'static,
+        F: Fn(&Record, &mut BufferedStandardStream) -> Result<(), Error> + Send + Sync + 'static,
     {
         if let Some(terminal_formatter) = terminal_formatter {
             self.0.terminal_formatter = Some(Arc::new(terminal_formatter));

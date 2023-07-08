@@ -65,7 +65,13 @@ impl TermLogger {
         if self.enabled(record.metadata()) {
             let mut streams = self.streams.lock().unwrap();
 
-            if record.level() == Level::Error {
+            if let Some(terminal_logger) = &self.config.terminal_formatter {
+                if record.level() == Level::Error {
+                    terminal_logger(record, &mut streams.err)
+                } else {
+                    terminal_logger(record, &mut streams.out)
+                }
+            } else if record.level() == Level::Error {
                 try_log_term(&self.config, record, &mut streams.err)
             } else {
                 try_log_term(&self.config, record, &mut streams.out)
