@@ -28,11 +28,11 @@ impl CombinedLogger {
 }
 
 impl Log for CombinedLogger {
-    fn enabled(&self, metadata: &Metadata<'_>) -> bool {
+    fn enabled(&self, metadata: &Metadata) -> bool {
         metadata.level() <= self.level
     }
 
-    fn log(&self, record: &Record<'_>) {
+    fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             for log in &self.logger {
                 log.log(record);

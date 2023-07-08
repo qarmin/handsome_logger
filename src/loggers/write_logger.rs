@@ -32,11 +32,11 @@ impl<W: Write + Send + 'static> WriteLogger<W> {
 }
 
 impl<W: Write + Send + 'static> Log for WriteLogger<W> {
-    fn enabled(&self, metadata: &Metadata<'_>) -> bool {
+    fn enabled(&self, metadata: &Metadata) -> bool {
         metadata.level() <= self.level
     }
 
-    fn log(&self, record: &Record<'_>) {
+    fn log(&self, record: &Record) {
         if let Some(message_filtering) = &self.config.message_filtering {
             if !message_filtering(record) {
                 return;

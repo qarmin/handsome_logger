@@ -10,7 +10,7 @@ use crate::Config;
 /// Logging functionality for `WriteLogger` that can be used for any write target, even console.
 /// Operate on tokens, which allow to easily change position of printing item
 #[inline(always)]
-pub fn try_log<W>(config: &Config, record: &Record<'_>, write: &mut W) -> Result<(), Error>
+pub fn try_log<W>(config: &Config, record: &Record, write: &mut W) -> Result<(), Error>
 where
     W: Write + Sized,
 {
@@ -39,7 +39,7 @@ where
 /// The only difference between this function and casual `try_log` is flushing at the end and
 /// using tokens `ColorStart` and `ColorEnd`, that allows to write colors into terminal
 #[inline(always)]
-pub fn try_log_term(config: &Config, record: &Record<'_>, write: &mut BufferedStandardStream) -> Result<(), Error> {
+pub fn try_log_term(config: &Config, record: &Record, write: &mut BufferedStandardStream) -> Result<(), Error> {
     for token in &config.tokens[record.level() as usize] {
         match token {
             Token::Time => write_time(write, config, record)?,
@@ -97,7 +97,7 @@ where
 /// Writes file name with its extension
 /// E.g. `file.rs`
 #[inline(always)]
-pub fn write_file_name<W>(record: &Record<'_>, write: &mut W) -> Result<(), Error>
+pub fn write_file_name<W>(record: &Record, write: &mut W) -> Result<(), Error>
 where
     W: Write + Sized,
 {
@@ -117,7 +117,7 @@ where
 
 /// Writes time in choosen time format
 #[inline(always)]
-pub fn write_time<W>(write: &mut W, config: &Config, record: &Record<'_>) -> Result<(), Error>
+pub fn write_time<W>(write: &mut W, config: &Config, record: &Record) -> Result<(), Error>
 where
     W: Write + Sized,
 {
@@ -142,7 +142,7 @@ where
 
 /// Writes color to terminal output
 #[inline(always)]
-pub fn set_color(write: &mut BufferedStandardStream, config: &Config, record: &Record<'_>, color_start: bool) -> Result<(), Error> {
+pub fn set_color(write: &mut BufferedStandardStream, config: &Config, record: &Record, color_start: bool) -> Result<(), Error> {
     if config.enabled_colors {
         if color_start {
             let color = &config.compiled_colors[record.level() as usize];
@@ -158,7 +158,7 @@ pub fn set_color(write: &mut BufferedStandardStream, config: &Config, record: &R
 /// Writes args provided in time macro
 /// E.g. record.args() in info!("Print This") will contain one argument "Print This"
 #[inline(always)]
-pub fn write_args<W>(record: &Record<'_>, write: &mut W) -> Result<(), Error>
+pub fn write_args<W>(record: &Record, write: &mut W) -> Result<(), Error>
 where
     W: Write + Sized,
 {
@@ -258,7 +258,7 @@ mod tests {
             err: BufferedStandardStream::stderr(ColorChoice::Always),
             out: BufferedStandardStream::stdout(ColorChoice::Always),
         };
-        let res = try_log_term(&config, &record, &mut streams.out);
+        let res = try_log_term(&config, &record, &mut streams);
         assert!(res.is_ok());
     }
 }

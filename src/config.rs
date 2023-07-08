@@ -1,8 +1,7 @@
-use core::fmt::Debug;
-use core::fmt::Formatter;
-use log::LevelFilter;
-use log::Record;
+use core::fmt::{Debug, Formatter, Write};
+use log::{LevelFilter, Record};
 use std::sync::Arc;
+use termcolor::BufferedStandardStream;
 use termcolor::{Color, ColorSpec};
 pub use time::format_description::FormatItem;
 pub use time::macros::format_description;
@@ -35,6 +34,8 @@ pub enum Token {
 }
 
 type FilterFunction = dyn Fn(&Record) -> bool + Send + Sync;
+type WriteFunction = dyn Fn(&Record, &mut dyn Write) -> bool + Send + Sync;
+type TerminalWriteFunction = dyn Fn(&Record, &mut BufferedStandardStream) -> bool + Send + Sync;
 
 #[derive(Clone)]
 pub struct Config {
@@ -53,6 +54,8 @@ pub struct Config {
     pub(crate) enabled_colors: bool,
 
     pub(crate) message_filtering: Option<Arc<FilterFunction>>,
+    pub(crate) write_formatter: Option<Arc<WriteFunction>>,
+    pub(crate) terminal_formatter: Option<Arc<TerminalWriteFunction>>,
 }
 
 const DEFAULT_FORMAT_TEXT: &str = "[_time] [_color_start][[_level]][_color_end] [_module]: [_msg]";
@@ -299,6 +302,38 @@ impl ConfigBuilder {
         self
     }
 
+    /// Sets custom formatter for `WriteLogger`
+    /// If you don't want to use default formatter, you can set your own
+    /// Setting `write_formatter` to None will use default formatter
+    /// Function takes as argument function that will be filtered allowed results
+    pub fn set_custom_write_formatter<F>(&mut self, write_formatter: Option<F>) -> &mut ConfigBuilder
+    where
+        F: Fn(&Record, &mut dyn Write) -> bool + Send + Sync + 'static,
+    {
+        if let Some(write_formatter) = write_formatter {
+            self.0.write_formatter = Some(Arc::new(write_formatter));
+        } else {
+            self.0.write_formatter = None;
+        }
+        self
+    }
+
+    /// Sets custom formatter for `TermLogger`
+    /// If you don't want to use default formatter, you can set your own
+    /// Setting `terminal_formatter` to None will use default formatter
+    /// Function takes as argument function that will be filtered allowed results
+    pub fn set_custom_terminal_formatter<F>(&mut self, terminal_formatter: Option<F>) -> &mut ConfigBuilder
+    where
+        F: Fn(&Record, &mut BufferedStandardStream) -> bool + Send + Sync + 'static,
+    {
+        if let Some(terminal_formatter) = terminal_formatter {
+            self.0.terminal_formatter = Some(Arc::new(terminal_formatter));
+        } else {
+            self.0.terminal_formatter = None;
+        }
+        self
+    }
+
     /// Builds the config
     pub fn build(&mut self) -> Config {
         self.0.clone()
@@ -334,12 +369,14 @@ impl Default for Config {
             format_text: [DEFAULT_FORMAT_TEXT; LEVEL_NUMBER],
             compiled_colors: [ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new()],
             message_filtering: None,
+            write_formatter: None,
+            terminal_formatter: None,
         }
     }
 }
 
 impl Debug for Config {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         f.debug_struct("Config")
             .field("level", &self.level)
             .field("write_once", &self.write_once)

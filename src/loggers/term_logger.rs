@@ -61,7 +61,7 @@ impl TermLogger {
         })
     }
 
-    fn try_log(&self, record: &Record<'_>) -> Result<(), Error> {
+    fn try_log(&self, record: &Record) -> Result<(), Error> {
         if self.enabled(record.metadata()) {
             let mut streams = self.streams.lock().unwrap();
 
@@ -77,11 +77,11 @@ impl TermLogger {
 }
 
 impl Log for TermLogger {
-    fn enabled(&self, metadata: &Metadata<'_>) -> bool {
+    fn enabled(&self, metadata: &Metadata) -> bool {
         metadata.level() <= self.level
     }
 
-    fn log(&self, record: &Record<'_>) {
+    fn log(&self, record: &Record) {
         if let Some(message_filtering) = &self.config.message_filtering {
             if !message_filtering(record) {
                 return;
