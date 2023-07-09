@@ -1,3 +1,6 @@
+## 0.4.0 - 09.07.2023
+- Added ability to filter messages by content
+
 ## 0.3.0 - 04.07.2023
 - Added example with file rotating
 - Added ability to write all items at once to writer object(useful for file rotating)
