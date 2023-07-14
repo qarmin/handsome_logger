@@ -1,6 +1,6 @@
 [package]
 name = "handsome_logger"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 authors = ["Rafał Mikrut <qarminkrut@gmail.com>"]
 description = "A fast, handsom and quite easy to use logger"

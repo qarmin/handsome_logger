@@ -258,7 +258,7 @@ mod tests {
             err: BufferedStandardStream::stderr(ColorChoice::Always),
             out: BufferedStandardStream::stdout(ColorChoice::Always),
         };
-        let res = try_log_term(&config, &record, &mut streams);
+        let res = try_log_term(&config, &record, &mut streams.err);
         assert!(res.is_ok());
     }
 }

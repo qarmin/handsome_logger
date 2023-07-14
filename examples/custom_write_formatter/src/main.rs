@@ -1,20 +1,41 @@
-use handsome_logger::{ColorChoice, Config, ConfigBuilder, TermLogger, TerminalMode};
+use handsome_logger::{ConfigBuilder, WriteLogger};
 use log::*;
+use std::fs::OpenOptions;
+use std::io::{Error, Write};
 
-fn write_formatter(record: &Record, write: &mut Write) -> bool {
-    if let Some(arg) = record.args().as_str() {
-        !arg.contains("E")
-    } else {
-        true
-    }
+fn write_formatter(record: &Record, write: &mut dyn Write) -> Result<(), Error> {
+    let level = record.level();
+    let level_str = match level {
+        Level::Trace => "TRACERT",
+        Level::Debug => "DEBUGGGER",
+        Level::Info => "INFORMER",
+        Level::Warn => "WARNUNGER",
+        Level::Error => "ERRORER",
+    };
+    write!(
+        write,
+        "[{:10}] {}: {}\n",
+        level_str,
+        record.module_path().unwrap_or_default(),
+        record.args()
+    )?;
+
+    Ok(())
 }
 
 fn main() {
-    let config_preset = ConfigBuilder::new()
+    let write_config = ConfigBuilder::new()
         .set_level(LevelFilter::Trace)
-        .set_custom_write_formatter(Some(filtering_messages))
+        .set_custom_write_formatter(Some(write_formatter))
         .build();
-    TermLogger::init(config_preset, TerminalMode::Mixed, ColorChoice::Auto).unwrap();
+    let write_rotater = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("write.log")
+        .unwrap();
+
+    WriteLogger::init(write_config, write_rotater).unwrap();
 
     trace!("Got TRACE");
     debug!("Got DEBUG");
@@ -23,8 +44,10 @@ fn main() {
     error!("Got ERROR");
 }
 
-// Output in terminal:
+// Output in `write.log`:
 //
-// 18:41:01 [INFO] terminal_logging: Got INFO
-// 18:41:01 [WARN] terminal_logging: Got WARNING
-// 18:41:01 [ERROR] terminal_logging: Got ERROR
+// [TRACERT   ] custom_write_formatter: Got TRACE
+// [DEBUGGGER ] custom_write_formatter: Got DEBUG
+// [INFORMER  ] custom_write_formatter: Got INFO
+// [WARNUNGER ] custom_write_formatter: Got WARNING
+// [ERRORER   ] custom_write_formatter: Got ERROR

@@ -1,9 +1,8 @@
-use core::fmt::{Debug, Formatter, Write};
+use core::fmt::{Debug, Formatter};
 use log::{LevelFilter, Record};
-use std::io::Error;
+use std::io::{Error, Write};
 use std::sync::Arc;
-use termcolor::BufferedStandardStream;
-use termcolor::{Color, ColorSpec};
+use termcolor::{BufferedStandardStream, Color, ColorSpec};
 pub use time::format_description::FormatItem;
 pub use time::macros::format_description;
 pub use time::UtcOffset;

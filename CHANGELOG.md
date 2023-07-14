@@ -1,3 +1,6 @@
+## 0.5.0 - 14.07.2023
+- Added custom user function formatting
+
 ## 0.4.0 - 09.07.2023
 - Added ability to filter messages by content
 
