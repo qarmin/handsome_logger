@@ -8,7 +8,12 @@ fn main() {
         .unwrap();
 
     let term_config = term_config_builder
-        .set_time_format(TimeFormat::Custom(format_description!("[year]::[month]::[day]  [hour]__[minute]__[second]")), None)
+        .set_time_format(
+            TimeFormat::Custom(format_description!(
+                "[year]::[month]::[day]  [hour]__[minute]__[second]"
+            )),
+            None,
+        )
         .build();
 
     TermLogger::init(term_config, TerminalMode::Mixed, ColorChoice::Auto).unwrap();

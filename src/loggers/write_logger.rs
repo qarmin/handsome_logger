@@ -32,11 +32,11 @@ impl<W: Write + Send + 'static> WriteLogger<W> {
 }
 
 impl<W: Write + Send + 'static> Log for WriteLogger<W> {
-    fn enabled(&self, metadata: &Metadata<'_>) -> bool {
+    fn enabled(&self, metadata: &Metadata) -> bool {
         metadata.level() <= self.level
     }
 
-    fn log(&self, record: &Record<'_>) {
+    fn log(&self, record: &Record) {
         if let Some(message_filtering) = &self.config.message_filtering {
             if !message_filtering(record) {
                 return;
@@ -45,7 +45,16 @@ impl<W: Write + Send + 'static> Log for WriteLogger<W> {
 
         if self.enabled(record.metadata()) {
             let mut write_lock = self.writable.lock().unwrap();
-            if self.config.write_once {
+
+            if let Some(write_formatter) = &self.config.write_formatter {
+                if self.config.write_once {
+                    let mut buffer: Vec<u8> = Vec::new();
+                    let _ = write_formatter(record, &mut buffer);
+                    let _ = write_lock.write_all(buffer.as_slice());
+                } else {
+                    let _ = write_formatter(record, &mut *write_lock);
+                }
+            } else if self.config.write_once {
                 let mut buffer: Vec<u8> = Vec::new();
                 let _ = try_log(&self.config, record, &mut buffer);
                 let _ = write_lock.write_all(buffer.as_slice());

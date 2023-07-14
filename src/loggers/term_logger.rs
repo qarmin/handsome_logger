@@ -61,11 +61,17 @@ impl TermLogger {
         })
     }
 
-    fn try_log(&self, record: &Record<'_>) -> Result<(), Error> {
+    fn try_log(&self, record: &Record) -> Result<(), Error> {
         if self.enabled(record.metadata()) {
             let mut streams = self.streams.lock().unwrap();
 
-            if record.level() == Level::Error {
+            if let Some(terminal_logger) = &self.config.terminal_formatter {
+                if record.level() == Level::Error {
+                    terminal_logger(record, &mut streams.err)
+                } else {
+                    terminal_logger(record, &mut streams.out)
+                }
+            } else if record.level() == Level::Error {
                 try_log_term(&self.config, record, &mut streams.err)
             } else {
                 try_log_term(&self.config, record, &mut streams.out)
@@ -77,11 +83,11 @@ impl TermLogger {
 }
 
 impl Log for TermLogger {
-    fn enabled(&self, metadata: &Metadata<'_>) -> bool {
+    fn enabled(&self, metadata: &Metadata) -> bool {
         metadata.level() <= self.level
     }
 
-    fn log(&self, record: &Record<'_>) {
+    fn log(&self, record: &Record) {
         if let Some(message_filtering) = &self.config.message_filtering {
             if !message_filtering(record) {
                 return;

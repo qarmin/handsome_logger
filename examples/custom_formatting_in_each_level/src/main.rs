@@ -6,9 +6,18 @@ fn main() {
         .set_background_color(Some(Color::Green), Some(LevelFilter::Trace))
         .set_colored_text_color(Some(Color::Rgb(255, 255, 255)), Some(LevelFilter::Trace))
         .set_format_text("[[_level]] [_color_start][_msg][_color_end]", None)
-        .set_format_text("[[_level]] [_color_start][_msg][_color_end] [_module]", Some(LevelFilter::Debug))
-        .set_format_text("[_color_start][[_level]] [_msg] [_module]:[_line][_color_end]", Some(LevelFilter::Error))
-        .set_format_text("[[_level]] [_msg] [_module]:[_line] [_color_start][_file][_color_end]", Some(LevelFilter::Trace))
+        .set_format_text(
+            "[[_level]] [_color_start][_msg][_color_end] [_module]",
+            Some(LevelFilter::Debug),
+        )
+        .set_format_text(
+            "[_color_start][[_level]] [_msg] [_module]:[_line][_color_end]",
+            Some(LevelFilter::Error),
+        )
+        .set_format_text(
+            "[[_level]] [_msg] [_module]:[_line] [_color_start][_file][_color_end]",
+            Some(LevelFilter::Trace),
+        )
         .set_level(LevelFilter::Trace)
         .build();
 
