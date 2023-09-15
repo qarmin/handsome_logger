@@ -155,6 +155,13 @@ impl ConfigBuilder {
         builder
     }
 
+    #[must_use]
+    pub fn new_preset_no_micros_in_time() -> ConfigBuilder {
+        let mut builder = ConfigBuilder::default();
+        builder.set_time_format(TimeFormat::Custom(format_description!("[hour]:[minute]:[second].[subsecond digits:3]")), None);
+        builder
+    }
+
     /// Sets format of logged message
     /// E.g. "\[_time\] \[\[_level\]\] \[_module\] \"\[_msg\]\""
     /// depending on other settings, may print something like:
@@ -351,7 +358,7 @@ impl Default for Config {
         Config {
             level: LevelFilter::Info,
             write_once: false,
-            time_format: [TimeFormat::Custom(format_description!("[hour]:[minute]:[second]")); LEVEL_NUMBER],
+            time_format: [TimeFormat::Custom(format_description!("[hour]:[minute]:[second].[subsecond digits:3]")); LEVEL_NUMBER],
             time_offset: UtcOffset::UTC,
 
             tokens: [vec![], vec![], vec![], vec![], vec![], vec![]],
@@ -388,7 +395,7 @@ impl Debug for Config {
             .field("enabled_colors", &self.enabled_colors)
             .field("format_text", &self.format_text)
             .field("compiled_colors", &self.compiled_colors)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

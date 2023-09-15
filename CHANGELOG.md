@@ -1,3 +1,6 @@
+## 0.6.0 - 19.07.2023
+- Added by default showing microseconds - it is quite usable when testing quite fast operations
+
 ## 0.5.0 - 14.07.2023
 - Added custom user function formatting
 

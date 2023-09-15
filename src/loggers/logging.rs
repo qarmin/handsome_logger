@@ -238,7 +238,7 @@ mod tests {
         let mut res_vec = Vec::new();
         let res = try_log(&config, &record, &mut res_vec);
         assert!(res.is_ok());
-        assert_eq!(String::from_utf8(res_vec).unwrap().len(), "20:24:46\n".len());
+        assert_eq!(String::from_utf8(res_vec).unwrap().len(), "20:24:46.123\n".len());
     }
 
     #[test]
