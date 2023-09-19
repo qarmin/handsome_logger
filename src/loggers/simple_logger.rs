@@ -6,6 +6,7 @@ use log::{set_boxed_logger, set_max_level, Level, LevelFilter, Log, Metadata, Re
 use crate::{Config, SharedLogger};
 
 use super::logging::try_log;
+use crate::common::get_env_log;
 
 pub struct SimpleLogger {
     level: LevelFilter,
@@ -15,13 +16,17 @@ pub struct SimpleLogger {
 
 impl SimpleLogger {
     pub fn init(config: Config) -> Result<(), SetLoggerError> {
-        set_max_level(config.level);
-        set_boxed_logger(SimpleLogger::new(config.level, config))
+        let log_level = get_env_log().unwrap_or(config.level);
+        set_max_level(log_level);
+        let logger = SimpleLogger::new(log_level, config);
+        set_boxed_logger(logger)
     }
 
     #[must_use]
     pub fn new(log_level: LevelFilter, mut config: Config) -> Box<SimpleLogger> {
         config.calculate_data();
+
+        let log_level = get_env_log().unwrap_or(log_level);
 
         Box::new(SimpleLogger {
             level: log_level,

@@ -1,6 +1,9 @@
-## 0.6.0 - 19.07.2023
+## 0.7.0 - 21.09.2023
+- Added ability to set log level by environment variable
+
+## 0.6.0 - 19.09.2023
 - Added by default showing microseconds - it is quite usable when testing quite fast operations
-- Increased minmum rust version from 1.65 to 1.67
+- Increased minimum rust version from 1.65 to 1.67
 
 ## 0.5.0 - 14.07.2023
 - Added custom user function formatting

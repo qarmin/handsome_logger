@@ -3,6 +3,7 @@ use std::sync::Mutex;
 
 use log::{set_boxed_logger, set_max_level, LevelFilter, Log, Metadata, Record, SetLoggerError};
 
+use crate::common::get_env_log;
 use crate::{Config, SharedLogger};
 
 use super::logging::try_log;
@@ -15,16 +16,19 @@ pub struct WriteLogger<W: Write + Send + 'static> {
 
 impl<W: Write + Send + 'static> WriteLogger<W> {
     pub fn init(config: Config, writable: W) -> Result<(), SetLoggerError> {
-        set_max_level(config.level);
-        set_boxed_logger(WriteLogger::new(config, writable))
+        let log_level = get_env_log().unwrap_or(config.level);
+        set_max_level(log_level);
+        let logger = WriteLogger::new(config, writable);
+        set_boxed_logger(logger)
     }
 
     #[must_use]
     pub fn new(mut config: Config, writable: W) -> Box<WriteLogger<W>> {
         config.calculate_data();
 
+        let log_level = get_env_log().unwrap_or(config.level);
         Box::new(WriteLogger {
-            level: config.level,
+            level: log_level,
             config,
             writable: Mutex::new(writable),
         })

@@ -4,6 +4,7 @@ use std::sync::Mutex;
 use log::{set_boxed_logger, set_max_level, Level, LevelFilter, Log, Metadata, Record, SetLoggerError};
 use termcolor::{BufferedStandardStream, ColorChoice};
 
+use crate::common::get_env_log;
 use crate::{Config, SharedLogger};
 
 use super::logging::*;
@@ -29,10 +30,10 @@ pub struct TermLogger {
 
 impl TermLogger {
     pub fn init(config: Config, mode: TerminalMode, color_choice: ColorChoice) -> Result<(), SetLoggerError> {
-        set_max_level(config.level);
+        let log_level = get_env_log().unwrap_or(config.level);
+        set_max_level(log_level);
         let logger = TermLogger::new(config, mode, color_choice);
-        set_boxed_logger(logger)?;
-        Ok(())
+        set_boxed_logger(logger)
     }
 
     #[must_use]
@@ -54,8 +55,10 @@ impl TermLogger {
 
         config.calculate_data();
 
+        let log_level = get_env_log().unwrap_or(config.level);
+
         Box::new(TermLogger {
-            level: config.level,
+            level: log_level,
             config,
             streams: Mutex::new(streams),
         })

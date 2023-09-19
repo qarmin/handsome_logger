@@ -13,6 +13,7 @@ I created it because the formatting abilities of this library were insufficient 
 - Customizable format - each element, like timestamp or module name, log level, can be customized
 - Colored output - you can colorize any part of log message
 - Simple to use - library can be easily configured in few lines of code for most use cases
+- Ability to set log level by environment variable e.g. `RUST_LOG=error ./app`
 - Filtering messages - you can ignore any message basing on your own function
 - Multiple log message formatters(you can use them more than once - nobody can stop you):
 ```
