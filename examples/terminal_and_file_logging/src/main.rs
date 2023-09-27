@@ -35,8 +35,8 @@ fn main() {
 
 // Output in my_rust_binary.log
 
-// [TRACE] "Got TRACE" [terminal_and_file_logging] - terminal_and_file_logging.rs:20
-// [DEBUG] "Got DEBUG" [terminal_and_file_logging] - terminal_and_file_logging.rs:21
-// [INFO] "Got INFO" [terminal_and_file_logging] - terminal_and_file_logging.rs:22
-// [WARN] "Got WARNING" [terminal_and_file_logging] - terminal_and_file_logging.rs:23
-// [ERROR] "Got ERROR" [terminal_and_file_logging] - terminal_and_file_logging.rs:24
+// [TRACE] "Got TRACE" [terminal_and_file_logging] - main.rs:23
+// [DEBUG] "Got DEBUG" [terminal_and_file_logging] - main.rs:24
+// [INFO] "Got INFO" [terminal_and_file_logging] - main.rs:25
+// [WARN] "Got WARNING" [terminal_and_file_logging] - main.rs:26
+// [ERROR] "Got ERROR" [terminal_and_file_logging] - main.rs:27

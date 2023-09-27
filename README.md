@@ -40,7 +40,9 @@ use handsome_logger::{ColorChoice, Config, TermLogger, TerminalMode};
 use log::*;
 
 fn main() {
-    TermLogger::init(Config::default(), TerminalMode::Mixed, ColorChoice::Auto).unwrap();
+    handsome_logger::init().unwrap();
+    // which is simpler alternative to
+    // TermLogger::init(Config::default(), TerminalMode::Mixed, ColorChoice::Auto).unwrap();
 
     trace!("Got TRACE");
     debug!("Got DEBUG");

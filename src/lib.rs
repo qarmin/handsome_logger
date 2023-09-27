@@ -8,6 +8,10 @@ mod common;
 mod config;
 mod loggers;
 
+pub fn init() -> Result<(), log::SetLoggerError> {
+    TermLogger::init(Config::default(), TerminalMode::Mixed, ColorChoice::Auto)
+}
+
 pub trait SharedLogger: Log {
     fn level(&self) -> LevelFilter;
     fn config(&self) -> Option<&Config>;

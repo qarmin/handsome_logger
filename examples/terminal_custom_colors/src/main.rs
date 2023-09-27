@@ -23,8 +23,8 @@ fn main() {
 
 // Output in terminal, with colored background of level name:
 //
-// 18:40:20 [TRACE] terminal_custom_colors: Got TRACE
-// 18:40:20 [DEBUG] terminal_custom_colors: Got DEBUG
-// 18:40:20 [INFO] terminal_custom_colors: Got INFO
-// 18:40:20 [WARN] terminal_custom_colors: Got WARNING
-// 18:40:20 [ERROR] terminal_custom_colors: Got ERROR
+// 14:57:06.908 [TRACE] terminal_custom_colors: Got TRACE
+// 14:57:06.908 [DEBUG] terminal_custom_colors: Got DEBUG
+// 14:57:06.908 [INFO] terminal_custom_colors: Got INFO
+// 14:57:06.908 [WARN] terminal_custom_colors: Got WARNING
+// 14:57:06.908 [ERROR] terminal_custom_colors: Got ERROR

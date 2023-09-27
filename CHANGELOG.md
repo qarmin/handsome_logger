@@ -1,3 +1,7 @@
+## 0.7.1 - 27.09.2023
+- Added ability to use `handsome_logger::init();` for really simple initialization
+- Added ability to use non-lowercased log levels in `RUST_LOG` environment variable
+
 ## 0.7.0 - 19.09.2023
 - Added ability to set log level by environment variable
 
