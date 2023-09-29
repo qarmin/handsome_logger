@@ -12,6 +12,11 @@ pub fn init() -> Result<(), log::SetLoggerError> {
     TermLogger::init(Config::default(), TerminalMode::Mixed, ColorChoice::Auto)
 }
 
+pub fn init_without_local_time() -> Result<(), log::SetLoggerError> {
+    let config = ConfigBuilder::default().set_remove_time_offset().build();
+    TermLogger::init(config, TerminalMode::Mixed, ColorChoice::Auto)
+}
+
 pub trait SharedLogger: Log {
     fn level(&self) -> LevelFilter;
     fn config(&self) -> Option<&Config>;

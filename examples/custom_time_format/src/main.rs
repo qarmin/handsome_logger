@@ -3,9 +3,6 @@ use log::*;
 
 fn main() {
     let mut term_config_builder = ConfigBuilder::new();
-    let _term_config = term_config_builder
-        .set_time_offset_to_local() // This may not work with multithreaded app, consider to check set_chrono_local_time_offset
-        .unwrap();
 
     let term_config = term_config_builder
         .set_time_format(
@@ -14,6 +11,7 @@ fn main() {
             )),
             None,
         )
+        .set_remove_time_offset() // Uses UTC time instead of local time
         .build();
 
     TermLogger::init(term_config, TerminalMode::Mixed, ColorChoice::Auto).unwrap();

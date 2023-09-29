@@ -247,34 +247,20 @@ impl ConfigBuilder {
     }
 
     /// Sets the offset used to the current local time offset
-    /// (overriding values previously set by [`ConfigBuilder::set_time_offset`]).
-    ///
-    /// This function may fail if the offset cannot be determined soundly.
-    /// This may be the case, when the program is multi-threaded by the time of calling this function.
-    /// One can opt-out of this behavior by setting `RUSTFLAGS="--cfg unsound_local_offset"`.
-    /// Doing so is not recommended, completely untested and may cause unexpected segfaults.
-    #[cfg(feature = "time-local-offset")]
     pub fn set_time_offset_to_local(&mut self) -> Result<&mut ConfigBuilder, &mut ConfigBuilder> {
-        match UtcOffset::current_local_offset() {
-            Ok(offset) => {
+        match Self::get_local_time_offset() {
+            Some(offset) => {
                 self.0.time_offset = offset;
                 Ok(self)
             }
-            Err(_) => Err(self),
+            None => Err(self),
         }
     }
 
-    /// Sets the offset used to the current local time offset
-    /// It is quite unsound so may cause crashes
-    #[cfg(feature = "chrono-local-offset")]
-    pub fn set_chrono_local_time_offset(&mut self) -> Result<&mut ConfigBuilder, &mut ConfigBuilder> {
-        match UtcOffset::from_whole_seconds(chrono::offset::Local::now().offset().local_minus_utc()) {
-            Ok(offset) => {
-                self.0.time_offset = offset;
-                Ok(self)
-            }
-            Err(_) => Err(self),
-        }
+    /// Reset the offset used to UTC
+    pub fn set_remove_time_offset(&mut self) -> &mut ConfigBuilder {
+        self.0.time_offset = UtcOffset::UTC;
+        self
     }
 
     /// Sets function that will be used to filter messages
@@ -341,6 +327,26 @@ impl ConfigBuilder {
         self
     }
 
+    /// Gets the local time offset
+    /// On unix will this use tz-rs crate,
+    /// otherwise it will use time crate
+    fn get_local_time_offset() -> Option<UtcOffset> {
+        #[cfg(target_family = "unix")]
+        {
+            let Ok(timezone) = tz::TimeZone::local() else {
+                return None;
+            };
+            let Ok(time_type) = timezone.find_current_local_time_type() else {
+                return None;
+            };
+            UtcOffset::from_whole_seconds(time_type.ut_offset()).ok()
+        }
+        #[cfg(not(target_family = "unix"))]
+        {
+            time::UtcOffset::current_local_offset().ok()
+        }
+    }
+
     /// Builds the config
     pub fn build(&mut self) -> Config {
         self.0.clone()
@@ -355,11 +361,13 @@ impl Default for ConfigBuilder {
 
 impl Default for Config {
     fn default() -> Config {
+        let tz_offset = ConfigBuilder::get_local_time_offset().unwrap_or(UtcOffset::UTC);
+
         Config {
             level: LevelFilter::Info,
             write_once: false,
             time_format: [TimeFormat::Custom(format_description!("[hour]:[minute]:[second].[subsecond digits:3]")); LEVEL_NUMBER],
-            time_offset: UtcOffset::UTC,
+            time_offset: tz_offset,
 
             tokens: [vec![], vec![], vec![], vec![], vec![], vec![]],
             colored_text_color: [

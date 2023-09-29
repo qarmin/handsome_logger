@@ -1,3 +1,7 @@
+## 0.8.0 - 29.09.2023
+- By default local time offset is used instead of UTC
+- Chrono dependency is completelly removed and tz-rs is used instead
+
 ## 0.7.1 - 27.09.2023
 - Added ability to use `handsome_logger::init();` for really simple initialization
 - Added ability to use non-lowercased log levels in `RUST_LOG` environment variable

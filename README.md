@@ -10,6 +10,7 @@ I created it because the formatting abilities of this library were insufficient 
 
 ## Features
 - Multiple loggers - SimpleLogger(simplest and the stablest), TermLogger(SimpleLogger + colored output), WriteLogger(can save logs e.g. to file), CombinedLogger(can combine multiple loggers and save logs, both to file and to terminal)
+- Uses by default local time offset instead of UTC - this can be easily disabled
 - Customizable format - each element, like timestamp or module name, log level, can be customized
 - Colored output - you can colorize any part of log message
 - Simple to use - library can be easily configured in few lines of code for most use cases
@@ -32,7 +33,7 @@ I created it because the formatting abilities of this library were insufficient 
 ## Example Usage
 First add to Cargo.toml, this two lines
 ```
-handsome_logger = "0.3"
+handsome_logger = "0.8"
 log = "0.4"
 ```
 ```rust

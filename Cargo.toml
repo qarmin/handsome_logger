@@ -1,6 +1,6 @@
 [package]
 name = "handsome_logger"
-version = "0.7.1"
+version = "0.8.0"
 edition = "2021"
 authors = ["Rafał Mikrut <qarminkrut@gmail.com>"]
 description = "A fast, handsom and quite easy to use logger"
@@ -11,13 +11,8 @@ keywords = ["log", "filelog", "logging"]
 license = "MIT OR Apache-2.0"
 rust-version = "1.67.0"
 
-[features]
-default = ["time-local-offset"]
-time-local-offset = ["time/local-offset"]
-chrono-local-offset = ["chrono"] # Time local offset is safe, but sometimes not works
-
 [dependencies]
 log = { version = "0.4", features = ["std"] }
 termcolor = { version = "1.3" }
-time = { version = "0.3", features = ["formatting", "macros"] }
-chrono = { version = "0.4.31", optional = true }
+time = { version = "0.3", features = ["formatting", "macros", "local-offset"] }
+tz-rs = "0.6.14"
