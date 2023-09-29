@@ -2,6 +2,8 @@ use log::{debug, error, info, trace, warn};
 
 fn main() {
     handsome_logger::init().unwrap();
+    // To use logger with UTC time - without using local time use:
+    // handsome_logger::init_without_local_time().unwrap();
 
     trace!("Got TRACE");
     debug!("Got DEBUG");
