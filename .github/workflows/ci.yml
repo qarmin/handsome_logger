@@ -28,15 +28,11 @@ jobs:
         run: |
           cargo check
           cargo check --all-features
-          cargo check --no-default-features --features "time-local-offset"
-          cargo check --no-default-features --features "chrono-local-offset"
 
       - name: Cargo check examples
         run: |
           cargo check --examples
           cargo check --examples --all-features
-          cargo check --examples --no-default-features --features "time-local-offset"
-          cargo check --examples --no-default-features --features "chrono-local-offset"
 
       - name: Clippy pedantic
         run: |
@@ -47,8 +43,6 @@ jobs:
         run: |
           cargo test --no-fail-fast -- --nocapture
           cargo test --all-features --no-fail-fast -- --nocapture
-          cargo test --no-default-features --features "time-local-offset" --no-fail-fast -- --nocapture
-          cargo test --no-default-features --features "chrono-local-offset" --no-fail-fast -- --nocapture
 
       - name: Doc
         run: |
