@@ -1,4 +1,9 @@
-## 0.9.9 - 11.03.2025
+## 0.9.1 - 11.03.2025
+
+- Show by default colors
+-
+
+## 0.9.0 - 11.03.2025
 
 - Updated tz-rs
 - Added enum with predefinied text formats

@@ -377,7 +377,7 @@ impl Default for Config {
         Self {
             level: LevelFilter::Info,
             write_once: false,
-            time_format: [TimeFormat::Custom(format_description!("[hour]:[minute]:[second].[subsecond digits:3]")); LEVEL_NUMBER],
+            time_format: [TimeFormat::TimeWithMicro; LEVEL_NUMBER],
             time_offset: tz_offset,
 
             tokens: [vec![], vec![], vec![], vec![], vec![], vec![]],
@@ -392,7 +392,7 @@ impl Default for Config {
 
             background_color: [None, None, None, None, None, None],
             enabled_colors: true,
-            format_text: [FormatText::Default.get(); LEVEL_NUMBER],
+            format_text: [FormatText::DefaultC.get(); LEVEL_NUMBER],
             compiled_colors: [ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new()],
             message_filtering: None,
             write_formatter: None,
