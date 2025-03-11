@@ -1,11 +1,11 @@
 use std::io::{Error, Write};
 use std::{process, thread};
 
-use log::Record;
-use termcolor::{BufferedStandardStream, WriteColor};
-
 use crate::config::{TimeFormat, Token};
 use crate::Config;
+use log::Record;
+use termcolor::{BufferedStandardStream, WriteColor};
+use time::macros::format_description;
 
 /// Logging functionality for `WriteLogger` that can be used for any write target, even console.
 /// Operate on tokens, which allow to easily change position of printing item
@@ -128,6 +128,8 @@ where
     let res = match config.time_format[record.level() as usize] {
         TimeFormat::Rfc2822 => time.format_into(write, &Rfc2822),
         TimeFormat::Rfc3339 => time.format_into(write, &Rfc3339),
+        TimeFormat::TimeWithMicro => time.format_into(write, &format_description!("[hour]:[minute]:[second].[subsecond digits:3]")),
+        TimeFormat::DateTimeWithMicro => time.format_into(write, &format_description!("[year]-[month]-[day] [hour]:[minute]:[second].[subsecond digits:3]")),
         TimeFormat::Custom(format) => time.format_into(write, &format),
     };
     match res {
@@ -200,7 +202,7 @@ mod tests {
             Token::Message,
             Token::Text("test"),
         ];
-        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i.clone()];
+        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i];
         let mut res_vec = Vec::new();
         let res = try_log(&config, &record, &mut res_vec);
         assert!(res.is_ok());
@@ -212,7 +214,7 @@ mod tests {
         let mut config = ConfigBuilder::new().build();
         let record = Record::builder().build();
         let i = vec![Token::ThreadId];
-        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i.clone()];
+        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i];
         let mut res_vec = Vec::new();
         let res = try_log(&config, &record, &mut res_vec);
         assert!(res.is_ok());
@@ -223,7 +225,7 @@ mod tests {
         let mut config = ConfigBuilder::new().build();
         let record = Record::builder().build();
         let i = vec![Token::ProcessId];
-        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i.clone()];
+        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i];
         let mut res_vec = Vec::new();
         let res = try_log(&config, &record, &mut res_vec);
         assert!(res.is_ok());
@@ -234,7 +236,7 @@ mod tests {
         let mut config = ConfigBuilder::new().build();
         let record = Record::builder().build();
         let i = vec![Token::Time];
-        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i.clone()];
+        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i];
         let mut res_vec = Vec::new();
         let res = try_log(&config, &record, &mut res_vec);
         assert!(res.is_ok());
@@ -252,7 +254,7 @@ mod tests {
         let mut config = ConfigBuilder::new().set_enabled_colours(true).build();
         let record = Record::builder().level(level).build();
         let i = vec![Token::Text("RAR"), Token::Level, Token::Text("RAR")];
-        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i.clone()];
+        config.tokens = [i.clone(), i.clone(), i.clone(), i.clone(), i.clone(), i];
 
         let mut streams = OutputStreams {
             err: BufferedStandardStream::stderr(ColorChoice::Always),

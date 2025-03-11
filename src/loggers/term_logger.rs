@@ -32,12 +32,12 @@ impl TermLogger {
     pub fn init(config: Config, mode: TerminalMode, color_choice: ColorChoice) -> Result<(), SetLoggerError> {
         let log_level = get_env_log().unwrap_or(config.level);
         set_max_level(log_level);
-        let logger = TermLogger::new(config, mode, color_choice);
+        let logger = Self::new(config, mode, color_choice);
         set_boxed_logger(logger)
     }
 
     #[must_use]
-    pub fn new(mut config: Config, mode: TerminalMode, color_choice: ColorChoice) -> Box<TermLogger> {
+    pub fn new(mut config: Config, mode: TerminalMode, color_choice: ColorChoice) -> Box<Self> {
         let streams = match mode {
             TerminalMode::Stdout => OutputStreams {
                 err: BufferedStandardStream::stdout(color_choice),
@@ -57,11 +57,16 @@ impl TermLogger {
 
         let log_level = get_env_log().unwrap_or(config.level);
 
-        Box::new(TermLogger {
+        Box::new(Self {
             level: log_level,
             config,
             streams: Mutex::new(streams),
         })
+    }
+
+    #[must_use]
+    pub fn new_from_config(config: Config) -> Box<Self> {
+        Self::new(config, TerminalMode::Mixed, ColorChoice::Auto)
     }
 
     fn try_log(&self, record: &Record) -> Result<(), Error> {

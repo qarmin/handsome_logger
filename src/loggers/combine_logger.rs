@@ -10,14 +10,14 @@ pub struct CombinedLogger {
 
 impl CombinedLogger {
     pub fn init(logger: Vec<Box<dyn SharedLogger>>) -> Result<(), SetLoggerError> {
-        let comblog = CombinedLogger::new(logger);
+        let comblog = Self::new(logger);
         let log_level = get_env_log().unwrap_or(comblog.level());
         set_max_level(log_level);
         set_boxed_logger(comblog)
     }
 
     #[must_use]
-    pub fn new(logger: Vec<Box<dyn SharedLogger>>) -> Box<CombinedLogger> {
+    pub fn new(logger: Vec<Box<dyn SharedLogger>>) -> Box<Self> {
         let mut log_level = LevelFilter::Off;
         for log in &logger {
             if log_level < log.level() {
@@ -26,7 +26,7 @@ impl CombinedLogger {
         }
         let log_level = get_env_log().unwrap_or(log_level);
 
-        Box::new(CombinedLogger { level: log_level, logger })
+        Box::new(Self { level: log_level, logger })
     }
 }
 

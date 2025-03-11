@@ -10,9 +10,12 @@ pub use time::UtcOffset;
 const LEVEL_NUMBER: usize = 6;
 
 #[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
 pub enum TimeFormat {
-    Rfc2822,
-    Rfc3339,
+    Rfc2822,           // Fri, 21 Nov 1997 09:55:06 -0600
+    Rfc3339,           // 2015-03-15T13:45:30Z
+    TimeWithMicro,     // HH:MM:SS.SSS
+    DateTimeWithMicro, // YYYY-MM-DD HH:MM:SS.SSS
     Custom(&'static [FormatItem<'static>]),
 }
 
@@ -58,9 +61,38 @@ pub struct Config {
     pub(crate) terminal_formatter: Option<Arc<TerminalWriteFunction>>,
 }
 
-const DEFAULT_FORMAT_TEXT: &str = "[_time] [_color_start][[_level]][_color_end] [_module]: [_msg]";
+/// Enum representing different format texts for logging.
+#[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
+pub enum FormatText {
+    Simple,
+    SimpleC,
+    Default,
+    DefaultC,
+    DefaultWithFileName,
+    DefaultWithFileNameC,
+    DefaultWithThread,
+    DefaultWithThreadC,
+    DefaultWithThreadFile,
+    DefaultWithThreadFileC,
+}
 
-const CONF_FULL_FORMAT_TEST: &str = "[_time] [_color_start][[_level]][_color_end] [[_module]] [_file_name]:[_line] - [_msg]";
+impl FormatText {
+    pub fn get(&self) -> &'static str {
+        match self {
+            Self::Simple => "[_time] [[_level]] [_msg]",
+            Self::SimpleC => "[_time] [_color_start][[_level]][_color_end] [_msg]",
+            Self::Default => "[_time] [[_level]] [_module]: [_msg]",
+            Self::DefaultC => "[_time] [_color_start][[_level]][_color_end] [_module]: [_msg]",
+            Self::DefaultWithFileName => "[_time] [[_level]] [[_module]] [_file_name]:[_line] - [_msg]",
+            Self::DefaultWithFileNameC => "[_time] [_color_start][[_level]][_color_end] [[_module]] [_file_name]:[_line] - [_msg]",
+            Self::DefaultWithThread => "[_time] [[_level]] [[_module]] ([_thread_id]) - [_msg]",
+            Self::DefaultWithThreadC => "[_time] [_color_start][[_level]][_color_end] ([_thread_id]) [[_module]] - [_msg]",
+            Self::DefaultWithThreadFile => "[_time] [[_level]] [[_module]] ([_thread_id]) [_file_name]:[_line] - [_msg]",
+            Self::DefaultWithThreadFileC => "[_time] [_color_start][[_level]][_color_end] ([_thread_id]) [[_module]] [_file_name]:[_line] - [_msg]",
+        }
+    }
+}
 
 impl Config {
     /// Internal function to calculate all required data from user input
@@ -137,29 +169,8 @@ pub struct ConfigBuilder(Config);
 
 impl ConfigBuilder {
     #[must_use]
-    pub fn new() -> ConfigBuilder {
-        ConfigBuilder(Config::default())
-    }
-
-    /// Preset for saving bigger amount of information than default preset
-    #[must_use]
-    pub fn new_preset_config_full() -> ConfigBuilder {
-        let mut builder = ConfigBuilder::default();
-        builder.set_time_format(
-            TimeFormat::Custom(format_description!(
-                "[year]-[month]-[day] [hour]:[minute]:[second].[subsecond digits:3] [offset_hour sign:mandatory]"
-            )),
-            None,
-        );
-        builder.set_format_text(CONF_FULL_FORMAT_TEST, None);
-        builder
-    }
-
-    #[must_use]
-    pub fn new_preset_no_micros_in_time() -> ConfigBuilder {
-        let mut builder = ConfigBuilder::default();
-        builder.set_time_format(TimeFormat::Custom(format_description!("[hour]:[minute]:[second].[subsecond digits:3]")), None);
-        builder
+    pub fn new() -> Self {
+        Self(Config::default())
     }
 
     /// Sets format of logged message
@@ -167,7 +178,7 @@ impl ConfigBuilder {
     /// depending on other settings, may print something like:
     /// 14:21:15 \[INFO\] main: "Hello world!"
     /// If level is none, it will set all levels
-    pub fn set_format_text(&mut self, format_text: &'static str, level: Option<LevelFilter>) -> &mut ConfigBuilder {
+    pub fn set_format_text(&mut self, format_text: &'static str, level: Option<LevelFilter>) -> &mut Self {
         if let Some(level) = level {
             self.0.format_text[level as usize] = format_text;
         } else {
@@ -181,7 +192,7 @@ impl ConfigBuilder {
     /// If level is none, it will set all levels
     /// If level is some, it will set only that level
     /// Background color is used only if `enabled_colors` is true
-    pub fn set_background_color(&mut self, background_color: Option<Color>, level: Option<LevelFilter>) -> &mut ConfigBuilder {
+    pub fn set_background_color(&mut self, background_color: Option<Color>, level: Option<LevelFilter>) -> &mut Self {
         if let Some(level) = level {
             self.0.background_color[level as usize] = background_color;
         } else {
@@ -195,7 +206,7 @@ impl ConfigBuilder {
     /// If level is none, it will set all levels
     /// If level is some, it will set only that level
     /// Background color is used only if `enabled_colors` is true
-    pub fn set_colored_text_color(&mut self, colored_text_color: Option<Color>, level: Option<LevelFilter>) -> &mut ConfigBuilder {
+    pub fn set_colored_text_color(&mut self, colored_text_color: Option<Color>, level: Option<LevelFilter>) -> &mut Self {
         if let Some(level) = level {
             self.0.colored_text_color[level as usize] = colored_text_color;
         } else {
@@ -205,7 +216,7 @@ impl ConfigBuilder {
     }
 
     /// Enables colouring of text - only works with `TermLogger`
-    pub fn set_enabled_colours(&mut self, enabled_colours: bool) -> &mut ConfigBuilder {
+    pub fn set_enabled_colours(&mut self, enabled_colours: bool) -> &mut Self {
         self.0.enabled_colors = enabled_colours;
         self
     }
@@ -213,7 +224,7 @@ impl ConfigBuilder {
     /// Sets the level of the logger.
     /// E.g. using `LevelFilter::Info` will print all logs with level `Info`, `Warn`, `Error`,
     /// but not `Debug` or `Trace`.
-    pub fn set_level(&mut self, level: LevelFilter) -> &mut ConfigBuilder {
+    pub fn set_level(&mut self, level: LevelFilter) -> &mut Self {
         self.0.level = level;
         self
     }
@@ -223,7 +234,7 @@ impl ConfigBuilder {
     /// This is useful when saving to file, because allows to not split one log into multiple
     /// files if rotating is used.
     /// Works only with `WriteLogger`
-    pub fn set_write_once(&mut self, write_once: bool) -> &mut ConfigBuilder {
+    pub fn set_write_once(&mut self, write_once: bool) -> &mut Self {
         self.0.write_once = write_once;
         self
     }
@@ -231,7 +242,7 @@ impl ConfigBuilder {
     /// Set time format used in logger
     /// If level is none, it will set all levels
     /// Time format can be predefined(Rfc2822 or Rfc3339) or custom
-    pub fn set_time_format(&mut self, time_format: TimeFormat, level: Option<LevelFilter>) -> &mut ConfigBuilder {
+    pub fn set_time_format(&mut self, time_format: TimeFormat, level: Option<LevelFilter>) -> &mut Self {
         if let Some(level) = level {
             self.0.time_format[level as usize] = time_format;
         } else {
@@ -241,13 +252,13 @@ impl ConfigBuilder {
     }
 
     /// Manually sets the offset used for the time.
-    pub fn set_time_offset(&mut self, offset: UtcOffset) -> &mut ConfigBuilder {
+    pub fn set_time_offset(&mut self, offset: UtcOffset) -> &mut Self {
         self.0.time_offset = offset;
         self
     }
 
     /// Sets the offset used to the current local time offset
-    pub fn set_time_offset_to_local(&mut self) -> Result<&mut ConfigBuilder, &mut ConfigBuilder> {
+    pub fn set_time_offset_to_local(&mut self) -> Result<&mut Self, &mut Self> {
         match Self::get_local_time_offset() {
             Some(offset) => {
                 self.0.time_offset = offset;
@@ -258,7 +269,7 @@ impl ConfigBuilder {
     }
 
     /// Reset the offset used to UTC
-    pub fn set_remove_time_offset(&mut self) -> &mut ConfigBuilder {
+    pub fn set_remove_time_offset(&mut self) -> &mut Self {
         self.0.time_offset = UtcOffset::UTC;
         self
     }
@@ -283,7 +294,7 @@ impl ConfigBuilder {
     /// info!("Got BED"); // This will be ignored
     /// info!("Got ANANAS"); // This will be printed
     /// ```
-    pub fn set_message_filtering<F>(&mut self, message_filtering: Option<F>) -> &mut ConfigBuilder
+    pub fn set_message_filtering<F>(&mut self, message_filtering: Option<F>) -> &mut Self
     where
         F: Fn(&Record) -> bool + Send + Sync + 'static,
     {
@@ -299,7 +310,7 @@ impl ConfigBuilder {
     /// If you don't want to use default formatter, you can set your own
     /// Setting `write_formatter` to None will use default formatter
     /// Function takes as argument function that will be filtered allowed results
-    pub fn set_custom_write_formatter<F>(&mut self, write_formatter: Option<F>) -> &mut ConfigBuilder
+    pub fn set_custom_write_formatter<F>(&mut self, write_formatter: Option<F>) -> &mut Self
     where
         F: Fn(&Record, &mut dyn Write) -> Result<(), Error> + Send + Sync + 'static,
     {
@@ -315,7 +326,7 @@ impl ConfigBuilder {
     /// If you don't want to use default formatter, you can set your own
     /// Setting `terminal_formatter` to None will use default formatter
     /// Function takes as argument function that will be filtered allowed results
-    pub fn set_custom_terminal_formatter<F>(&mut self, terminal_formatter: Option<F>) -> &mut ConfigBuilder
+    pub fn set_custom_terminal_formatter<F>(&mut self, terminal_formatter: Option<F>) -> &mut Self
     where
         F: Fn(&Record, &mut BufferedStandardStream) -> Result<(), Error> + Send + Sync + 'static,
     {
@@ -355,15 +366,15 @@ impl ConfigBuilder {
 
 impl Default for ConfigBuilder {
     fn default() -> Self {
-        ConfigBuilder::new()
+        Self::new()
     }
 }
 
 impl Default for Config {
-    fn default() -> Config {
+    fn default() -> Self {
         let tz_offset = ConfigBuilder::get_local_time_offset().unwrap_or(UtcOffset::UTC);
 
-        Config {
+        Self {
             level: LevelFilter::Info,
             write_once: false,
             time_format: [TimeFormat::Custom(format_description!("[hour]:[minute]:[second].[subsecond digits:3]")); LEVEL_NUMBER],
@@ -381,7 +392,7 @@ impl Default for Config {
 
             background_color: [None, None, None, None, None, None],
             enabled_colors: true,
-            format_text: [DEFAULT_FORMAT_TEXT; LEVEL_NUMBER],
+            format_text: [FormatText::Default.get(); LEVEL_NUMBER],
             compiled_colors: [ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new()],
             message_filtering: None,
             write_formatter: None,

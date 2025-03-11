@@ -18,16 +18,16 @@ impl<W: Write + Send + 'static> WriteLogger<W> {
     pub fn init(config: Config, writable: W) -> Result<(), SetLoggerError> {
         let log_level = get_env_log().unwrap_or(config.level);
         set_max_level(log_level);
-        let logger = WriteLogger::new(config, writable);
+        let logger = Self::new(config, writable);
         set_boxed_logger(logger)
     }
 
     #[must_use]
-    pub fn new(mut config: Config, writable: W) -> Box<WriteLogger<W>> {
+    pub fn new(mut config: Config, writable: W) -> Box<Self> {
         config.calculate_data();
 
         let log_level = get_env_log().unwrap_or(config.level);
-        Box::new(WriteLogger {
+        Box::new(Self {
             level: log_level,
             config,
             writable: Mutex::new(writable),

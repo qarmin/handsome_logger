@@ -1,8 +1,7 @@
-use handsome_logger::{ColorChoice, Config, TermLogger, TerminalMode};
 use log::*;
 
 fn main() {
-    handsome_logger::init();
+    handsome_logger::init().unwrap();
     // or longer version which do same thing:
     // TermLogger::init(Config::default(), TerminalMode::Mixed, ColorChoice::Auto).unwrap();
 

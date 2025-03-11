@@ -1,6 +1,5 @@
-use handsome_logger::{Color, ColorChoice, ConfigBuilder, TermLogger, TerminalMode, WriteLogger};
+use handsome_logger::{Color, ColorChoice, ConfigBuilder, TermLogger, TerminalMode};
 use log::*;
-use std::fs::OpenOptions;
 use std::io::{Error, Write};
 use termcolor::{BufferedStandardStream, ColorSpec, WriteColor};
 
