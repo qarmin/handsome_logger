@@ -1,4 +1,4 @@
-use handsome_logger::{ColorChoice, CombinedLogger, ConfigBuilder, FormatText, TermLogger, TerminalMode, WriteLogger};
+use handsome_logger::{CombinedLogger, ConfigBuilder, FormatText, TermLogger, WriteLogger};
 use log::*;
 use std::fs::File;
 

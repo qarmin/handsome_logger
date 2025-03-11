@@ -3,8 +3,6 @@ name: Build and test
 on:
   push:
   pull_request:
-  schedule:
-    - cron: '0 0 * * 1'
 
 jobs:
   full_ci:
@@ -31,8 +29,7 @@ jobs:
 
       - name: Cargo check examples
         run: |
-          cargo check --examples
-          cargo check --examples --all-features
+          for project in examples/*; do cd $project; cargo check; cd -; done
 
       - name: Clippy pedantic
         run: |
