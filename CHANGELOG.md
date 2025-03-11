@@ -3,6 +3,7 @@
 - Updated tz-rs
 - Added enum with predefinied text formats
 - Decreased number of code, needed by typical setup
+- Increased minimum rust version to 1.81
 
 ## 0.8.0 - 29.09.2023
 
