@@ -28,6 +28,7 @@ jobs:
           cargo check --all-features
 
       - name: Cargo check examples
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           for project in examples/*; do cd $project; cargo check; cd -; done
 
