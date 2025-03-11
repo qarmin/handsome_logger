@@ -1,3 +1,9 @@
+## 0.9.9 - 11.03.2025
+
+- Updated tz-rs
+- Added enum with predefinied text formats
+- Decreased number of code, needed by typical setup
+
 ## 0.8.0 - 29.09.2023
 
 - By default local time offset is used instead of UTC
