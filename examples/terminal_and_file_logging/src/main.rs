@@ -1,13 +1,10 @@
-use handsome_logger::{ColorChoice, CombinedLogger, ConfigBuilder, TermLogger, TerminalMode, WriteLogger};
+use handsome_logger::{ColorChoice, CombinedLogger, ConfigBuilder, FormatText, TermLogger, TerminalMode, WriteLogger};
 use log::*;
 use std::fs::File;
 
 fn main() {
     let term_config = ConfigBuilder::new()
-        .set_format_text(
-            "[_msg] [_color_start][[_level]][_color_end], module [_module], line [_line]",
-            None,
-        )
+        .set_format_text(FormatText::DefaultWithFileName.get(), None)
         .build();
     let write_config = ConfigBuilder::new()
         .set_format_text("[[_level]] \"[_msg]\" [[_module]] - [_file_name]:[_line]", None)
@@ -15,7 +12,7 @@ fn main() {
         .build();
 
     CombinedLogger::init(vec![
-        TermLogger::new(term_config, TerminalMode::Mixed, ColorChoice::Auto),
+        TermLogger::new_from_config(term_config),
         WriteLogger::new(write_config, File::create("my_rust_binary.log").unwrap()),
     ])
     .unwrap();
