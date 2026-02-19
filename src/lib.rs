@@ -1,3 +1,4 @@
+#![allow(clippy::collapsible_if)]
 pub use log::{Level, LevelFilter, Log};
 pub use termcolor::{Color, ColorChoice};
 

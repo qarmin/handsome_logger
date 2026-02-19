@@ -9,7 +9,7 @@ repository = "https://github.com/qarmin/handsome_logger"
 readme = "README.md"
 keywords = ["log", "filelog", "logging"]
 license = "MIT OR Apache-2.0"
-rust-version = "1.86.0"
+rust-version = "1.88.0"
 
 [dependencies]
 log = { version = "0.4", features = ["std"] }
