@@ -1,7 +1,11 @@
+## 0.9.2 - 19.02.2026
+
+- Add `timezone_file_access` feature, to be able to remove file system access for timezone data, which is problematic in miri.
+- Added ability to print simple log messages without any time, to avoid accessing timezone data at all
+
 ## 0.9.1 - 11.03.2025
 
 - Show by default colors
--
 
 ## 0.9.0 - 11.03.2025
 
