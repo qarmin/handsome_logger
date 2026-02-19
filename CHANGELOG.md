@@ -2,6 +2,7 @@
 
 - Add `timezone_file_access` feature, to be able to remove file system access for timezone data, which is problematic in miri.
 - Added ability to print simple log messages without any time, to avoid accessing timezone data at all
+- Increased minimum rust version to 1.86
 
 ## 0.9.1 - 11.03.2025
 
