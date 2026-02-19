@@ -69,6 +69,13 @@ impl TermLogger {
         Self::new(config, TerminalMode::Mixed, ColorChoice::Auto)
     }
 
+    pub fn init_from_config(config: Config) -> Result<(), SetLoggerError> {
+        let log_level = get_env_log().unwrap_or(config.level);
+        set_max_level(log_level);
+        let logger = Self::new_from_config(config);
+        set_boxed_logger(logger)
+    }
+
     fn try_log(&self, record: &Record) -> Result<(), Error> {
         if self.enabled(record.metadata()) {
             let mut streams = self.streams.lock().unwrap();

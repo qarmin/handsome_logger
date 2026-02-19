@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        toolchain: [ stable, 1.81.0 ]
+        toolchain: [ stable, 1.88.0 ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -32,9 +32,9 @@ jobs:
         run: |
           for project in examples/*; do cd $project; cargo check; cd -; done
 
-      - name: Clippy pedantic
+      - name: Clippy
         run: |
-          cargo clippy -- -W clippy::pedantic -A clippy::module-name-repetitions -A clippy::missing-errors-doc -A clippy::inline_always -A clippy::wildcard-imports
+          cargo clippy
         if: ${{ matrix.type == 'stable' }}
 
       - name: Test

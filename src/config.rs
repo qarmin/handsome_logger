@@ -65,6 +65,10 @@ pub struct Config {
 #[derive(Debug, Clone, Copy)]
 #[non_exhaustive]
 pub enum FormatText {
+    MessageOnly,
+    MessageOnlyC,
+    LevelMessage,
+    LevelMessageC,
     Simple,
     SimpleC,
     Default,
@@ -80,6 +84,10 @@ pub enum FormatText {
 impl FormatText {
     pub fn get(&self) -> &'static str {
         match self {
+            Self::MessageOnly => "[_msg]",
+            Self::MessageOnlyC => "[_color_start][_msg][_color_end]",
+            Self::LevelMessage => "[[_level]] [_msg]",
+            Self::LevelMessageC => "[_color_start][[_level]][_color_end] [_msg]",
             Self::Simple => "[_time] [[_level]] [_msg]",
             Self::SimpleC => "[_time] [_color_start][[_level]][_color_end] [_msg]",
             Self::Default => "[_time] [[_level]] [_module]: [_msg]",
@@ -342,19 +350,26 @@ impl ConfigBuilder {
     /// On unix will this use tz-rs crate,
     /// otherwise it will use time crate
     fn get_local_time_offset() -> Option<UtcOffset> {
-        #[cfg(target_family = "unix")]
+        #[cfg(not(feature = "timezone_file_access"))]
         {
-            let Ok(timezone) = tz::TimeZone::local() else {
-                return None;
-            };
-            let Ok(time_type) = timezone.find_current_local_time_type() else {
-                return None;
-            };
-            UtcOffset::from_whole_seconds(time_type.ut_offset()).ok()
+            return None;
         }
-        #[cfg(not(target_family = "unix"))]
-        {
-            time::UtcOffset::current_local_offset().ok()
+
+        #[cfg(feature = "timezone_file_access")] {
+            #[cfg(target_family = "unix")]
+            {
+                let Ok(timezone) = tz::TimeZone::local() else {
+                    return None;
+                };
+                let Ok(time_type) = timezone.find_current_local_time_type() else {
+                    return None;
+                };
+                UtcOffset::from_whole_seconds(time_type.ut_offset()).ok()
+            }
+            #[cfg(not(target_family = "unix"))]
+            {
+                time::UtcOffset::current_local_offset().ok()
+            }
         }
     }
 
