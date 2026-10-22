@@ -1,3 +1,12 @@
+## 0.10.0 - 22.10.2026
+
+- Added `RotatingFile` - writer with panic-free rotation by size, time or both (`RotationType`), timestamp or numbered file names (`Naming`), `max_files` retention (10 by default), `rotate_on_startup` and local/UTC time zone choice
+- Added `WriteLogger::init_rotating` and `WriteLogger::new_rotating`
+- Added `ConfigBuilder::for_file()`, `init_with_file` and `CombinedLogger::builder()` (with `terminal`, `terminal_with`, `file` and `fallback_to_terminal`), to log both to terminal and rotated file in few lines
+- Added `ConfigBuilder::set_allowed_modules` and `ConfigBuilder::set_ignored_modules`
+- **Breaking**: `set_write_once` was renamed to `set_single_write` and is now enabled by default
+- Rewritten rotating example to not require `file-rotate` crate
+
 ## 0.9.2 - 19.02.2026
 
 - Add `timezone_file_access` feature, to be able to remove file system access for timezone data, which is problematic in miri.

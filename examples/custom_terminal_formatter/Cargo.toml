@@ -8,6 +8,6 @@ edition = "2021"
 
 [dependencies]
 log = "0.4"
-handsome_logger = { path = "../..", version = "0.9" }
+handsome_logger = { path = "../..", version = "0.10" }
 termcolor = "1.2.0"
 

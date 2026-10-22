@@ -3,9 +3,9 @@ use log::{LevelFilter, Record};
 use std::io::{Error, Write};
 use std::sync::Arc;
 use termcolor::{BufferedStandardStream, Color, ColorSpec};
+pub use time::UtcOffset;
 pub use time::format_description::FormatItem;
 pub use time::macros::format_description;
-pub use time::UtcOffset;
 
 const LEVEL_NUMBER: usize = 6;
 
@@ -44,7 +44,7 @@ type TerminalWriteFunction = dyn Fn(&Record, &mut BufferedStandardStream) -> Res
 pub struct Config {
     pub(crate) level: LevelFilter,
     pub(crate) time_offset: UtcOffset,
-    pub(crate) write_once: bool,
+    pub(crate) single_write: bool,
 
     pub(crate) time_format: [TimeFormat; LEVEL_NUMBER],
     pub(crate) format_text: [&'static str; LEVEL_NUMBER],
@@ -57,6 +57,8 @@ pub struct Config {
     pub(crate) enabled_colors: bool,
 
     pub(crate) message_filtering: Option<Arc<FilterFunction>>,
+    pub(crate) allowed_modules: Vec<String>,
+    pub(crate) ignored_modules: Vec<String>,
     pub(crate) write_formatter: Option<Arc<WriteFunction>>,
     pub(crate) terminal_formatter: Option<Arc<TerminalWriteFunction>>,
 }
@@ -102,7 +104,23 @@ impl FormatText {
     }
 }
 
+fn module_matches(module_path: &str, name: &str) -> bool {
+    module_path.strip_prefix(name).is_some_and(|rest| rest.is_empty() || rest.starts_with("::"))
+}
+
 impl Config {
+    pub(crate) fn is_record_allowed(&self, record: &Record) -> bool {
+        if let Some(module_path) = record.module_path() {
+            if self.ignored_modules.iter().any(|name| module_matches(module_path, name)) {
+                return false;
+            }
+            if !self.allowed_modules.is_empty() && !self.allowed_modules.iter().any(|name| module_matches(module_path, name)) {
+                return false;
+            }
+        }
+        self.message_filtering.as_ref().is_none_or(|message_filtering| message_filtering(record))
+    }
+
     /// Internal function to calculate all required data from user input
     /// this is done only once to avoid unnecessary computations
     pub(crate) fn calculate_data(&mut self) {
@@ -181,6 +199,17 @@ impl ConfigBuilder {
         Self(Config::default())
     }
 
+    /// Builder preconfigured for writing to files: `Debug` level, date with microseconds and thread and file info in each line
+    #[must_use]
+    pub fn for_file() -> Self {
+        let mut builder = Self::new();
+        builder
+            .set_level(LevelFilter::Debug)
+            .set_time_format(TimeFormat::DateTimeWithMicro, None)
+            .set_format_text(FormatText::DefaultWithThreadFile.get(), None);
+        builder
+    }
+
     /// Sets format of logged message
     /// E.g. "\[_time\] \[\[_level\]\] \[_module\] \"\[_msg\]\""
     /// depending on other settings, may print something like:
@@ -241,9 +270,9 @@ impl ConfigBuilder {
     /// at the end writes only once to target
     /// This is useful when saving to file, because allows to not split one log into multiple
     /// files if rotating is used.
-    /// Works only with `WriteLogger`
-    pub fn set_write_once(&mut self, write_once: bool) -> &mut Self {
-        self.0.write_once = write_once;
+    /// Enabled by default, works only with `WriteLogger`
+    pub fn set_single_write(&mut self, single_write: bool) -> &mut Self {
+        self.0.single_write = single_write;
         self
     }
 
@@ -314,6 +343,22 @@ impl ConfigBuilder {
         self
     }
 
+    /// Logs only messages from modules that are equal to one of the given names or are nested inside them
+    /// E.g. `"app"` matches `app` and `app::net`, but not `app_utils`
+    /// Messages without module path are always allowed
+    /// Empty list allows all modules and works together with `set_message_filtering`
+    pub fn set_allowed_modules(&mut self, modules: &[&str]) -> &mut Self {
+        self.0.allowed_modules = modules.iter().map(|module| (*module).to_string()).collect();
+        self
+    }
+
+    /// Ignores messages from modules that are equal to one of the given names or are nested inside them
+    /// Takes precedence over `set_allowed_modules`
+    pub fn set_ignored_modules(&mut self, modules: &[&str]) -> &mut Self {
+        self.0.ignored_modules = modules.iter().map(|module| (*module).to_string()).collect();
+        self
+    }
+
     /// Sets custom formatter for `WriteLogger`
     /// If you don't want to use default formatter, you can set your own
     /// Setting `write_formatter` to None will use default formatter
@@ -349,13 +394,14 @@ impl ConfigBuilder {
     /// Gets the local time offset
     /// On unix will this use tz-rs crate,
     /// otherwise it will use time crate
-    fn get_local_time_offset() -> Option<UtcOffset> {
+    pub(crate) fn get_local_time_offset() -> Option<UtcOffset> {
         #[cfg(not(feature = "timezone_file_access"))]
         {
             return None;
         }
 
-        #[cfg(feature = "timezone_file_access")] {
+        #[cfg(feature = "timezone_file_access")]
+        {
             #[cfg(target_family = "unix")]
             {
                 let Ok(timezone) = tz::TimeZone::local() else {
@@ -391,7 +437,7 @@ impl Default for Config {
 
         Self {
             level: LevelFilter::Info,
-            write_once: false,
+            single_write: true,
             time_format: [TimeFormat::TimeWithMicro; LEVEL_NUMBER],
             time_offset: tz_offset,
 
@@ -410,6 +456,8 @@ impl Default for Config {
             format_text: [FormatText::DefaultC.get(); LEVEL_NUMBER],
             compiled_colors: [ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new(), ColorSpec::new()],
             message_filtering: None,
+            allowed_modules: Vec::new(),
+            ignored_modules: Vec::new(),
             write_formatter: None,
             terminal_formatter: None,
         }
@@ -420,7 +468,7 @@ impl Debug for Config {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         f.debug_struct("Config")
             .field("level", &self.level)
-            .field("write_once", &self.write_once)
+            .field("single_write", &self.single_write)
             .field("time_format", &self.time_format)
             .field("time_offset", &self.time_offset)
             .field("tokens", &self.tokens)
@@ -493,5 +541,34 @@ mod tests {
         let mut config = ConfigBuilder::new().set_format_text(text, None).build();
         config.calculate_data();
         assert_eq!(config.tokens[0], vec![]);
+    }
+
+    fn allowed(config: &Config, module_path: Option<&'static str>) -> bool {
+        config.is_record_allowed(&Record::builder().module_path_static(module_path).build())
+    }
+
+    #[test]
+    fn module_lists_match_on_segment_boundary() {
+        let config = ConfigBuilder::new().set_allowed_modules(&["app", "lib::net"]).build();
+        assert!(allowed(&config, Some("app")));
+        assert!(allowed(&config, Some("app::db")));
+        assert!(allowed(&config, Some("lib::net::tcp")));
+        assert!(!allowed(&config, Some("app_utils")));
+        assert!(!allowed(&config, Some("lib")));
+        assert!(allowed(&config, None));
+    }
+
+    #[test]
+    fn ignored_modules_win_over_allowed() {
+        let config = ConfigBuilder::new().set_allowed_modules(&["app"]).set_ignored_modules(&["app::noisy"]).build();
+        assert!(allowed(&config, Some("app::db")));
+        assert!(!allowed(&config, Some("app::noisy::deep")));
+        assert!(allowed(&ConfigBuilder::new().build(), Some("anything")));
+    }
+
+    #[test]
+    fn module_lists_combine_with_message_filtering() {
+        let config = ConfigBuilder::new().set_allowed_modules(&["app"]).set_message_filtering(Some(|_: &Record| false)).build();
+        assert!(!allowed(&config, Some("app")));
     }
 }

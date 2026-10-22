@@ -19,7 +19,8 @@ to be made to it to "fix" it were too big.
 - Colored output - you can colorize any part of log message
 - Simple to use - library can be easily configured in few lines of code for most use cases
 - Ability to set log level by environment variable e.g. `RUST_LOG=error ./app`
-- Filtering messages - you can ignore any message basing on your own function
+- Filtering messages - you can ignore any message basing on your own function or on module names
+- Built-in log file rotation by size and/or time, with retention, without additional dependencies
 - Multiple log message formatters(you can use them more than once - nobody can stop you):
 
 ```
@@ -41,7 +42,7 @@ to be made to it to "fix" it were too big.
 First add to Cargo.toml, this two lines
 
 ```
-handsome_logger = "0.9"
+handsome_logger = "0.10"
 log = "0.4"
 ```
 
@@ -70,13 +71,28 @@ should print
 21:20:22 [ERROR] terminal_logging: Got ERROR
 ```
 
+## Logging to rotated file
+
+```rust
+use handsome_logger::{RotationPeriod, RotationType};
+
+fn main() {
+    // Terminal (from Info) and file (from Debug), the file is rotated every day, 10 rotated files are kept
+    handsome_logger::init_with_file("app.log", RotationType::Time { period: RotationPeriod::Daily }).unwrap();
+}
+```
+
+`RotationType` can be `None`, `Size`, `Time` or `TimeSize` (rotates when any of the conditions is met). `RotatingFile` never panics - if rotation fails, logs are still appended to the current file and rotation is retried later.
+For more control use `RotatingFile` with `WriteLogger::init_rotating` or `CombinedLogger::builder()`.
+
 examples folder contains examples of
 
 - formatting logs
 - saving logs to file and rotating it
 - using multiple loggers
 - colouring terminal output
-- filtering messages
+- filtering messages (by function and by module names)
+- rotating log files (`init_with_file`, `RotatingFile`)
 
 ## License
 
