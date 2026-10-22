@@ -1,4 +1,4 @@
-use log::{set_boxed_logger, set_max_level, LevelFilter, Log, Metadata, Record, SetLoggerError};
+use log::{LevelFilter, Log, Metadata, Record, SetLoggerError, set_boxed_logger, set_max_level};
 
 use crate::common::get_env_log;
 use crate::{Config, SharedLogger};
@@ -9,6 +9,11 @@ pub struct CombinedLogger {
 }
 
 impl CombinedLogger {
+    #[must_use]
+    pub fn builder() -> crate::CombinedLoggerBuilder {
+        crate::CombinedLoggerBuilder::default()
+    }
+
     pub fn init(logger: Vec<Box<dyn SharedLogger>>) -> Result<(), SetLoggerError> {
         let comblog = Self::new(logger);
         let log_level = get_env_log().unwrap_or(comblog.level());

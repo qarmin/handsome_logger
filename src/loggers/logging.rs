@@ -1,8 +1,8 @@
 use std::io::{Error, Write};
 use std::{process, thread};
 
-use crate::config::{TimeFormat, Token};
 use crate::Config;
+use crate::config::{TimeFormat, Token};
 use log::Record;
 use termcolor::{BufferedStandardStream, WriteColor};
 use time::macros::format_description;
@@ -173,8 +173,8 @@ mod tests {
     use log::Level;
     use termcolor::ColorChoice;
 
-    use crate::loggers::term_logger::OutputStreams;
     use crate::ConfigBuilder;
+    use crate::loggers::term_logger::OutputStreams;
 
     use super::*;
 

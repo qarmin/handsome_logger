@@ -1,10 +1,10 @@
 use std::io::Write;
 use std::sync::Mutex;
 
-use log::{set_boxed_logger, set_max_level, LevelFilter, Log, Metadata, Record, SetLoggerError};
+use log::{LevelFilter, Log, Metadata, Record, SetLoggerError, set_boxed_logger, set_max_level};
 
 use crate::common::get_env_log;
-use crate::{Config, SharedLogger};
+use crate::{Config, RotatingFile, SharedLogger};
 
 use super::logging::try_log;
 
@@ -35,30 +35,44 @@ impl<W: Write + Send + 'static> WriteLogger<W> {
     }
 }
 
+impl WriteLogger<RotatingFile> {
+    /// Same as `init`, but forces `single_write`, so one message is never split between two files
+    pub fn init_rotating(config: Config, file: RotatingFile) -> Result<(), SetLoggerError> {
+        let log_level = get_env_log().unwrap_or(config.level);
+        set_max_level(log_level);
+        set_boxed_logger(Self::new_rotating(config, file))
+    }
+
+    /// Same as `new`, but forces `single_write`, so one message is never split between two files
+    #[must_use]
+    pub fn new_rotating(mut config: Config, file: RotatingFile) -> Box<Self> {
+        config.single_write = true;
+        Self::new(config, file)
+    }
+}
+
 impl<W: Write + Send + 'static> Log for WriteLogger<W> {
     fn enabled(&self, metadata: &Metadata) -> bool {
         metadata.level() <= self.level
     }
 
     fn log(&self, record: &Record) {
-        if let Some(message_filtering) = &self.config.message_filtering {
-            if !message_filtering(record) {
-                return;
-            }
+        if !self.config.is_record_allowed(record) {
+            return;
         }
 
         if self.enabled(record.metadata()) {
             let mut write_lock = self.writable.lock().unwrap();
 
             if let Some(write_formatter) = &self.config.write_formatter {
-                if self.config.write_once {
+                if self.config.single_write {
                     let mut buffer: Vec<u8> = Vec::new();
                     let _ = write_formatter(record, &mut buffer);
                     let _ = write_lock.write_all(buffer.as_slice());
                 } else {
                     let _ = write_formatter(record, &mut *write_lock);
                 }
-            } else if self.config.write_once {
+            } else if self.config.single_write {
                 let mut buffer: Vec<u8> = Vec::new();
                 let _ = try_log(&self.config, record, &mut buffer);
                 let _ = write_lock.write_all(buffer.as_slice());

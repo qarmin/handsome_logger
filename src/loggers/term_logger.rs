@@ -1,7 +1,7 @@
 use std::io::{Error, Write};
 use std::sync::Mutex;
 
-use log::{set_boxed_logger, set_max_level, Level, LevelFilter, Log, Metadata, Record, SetLoggerError};
+use log::{Level, LevelFilter, Log, Metadata, Record, SetLoggerError, set_boxed_logger, set_max_level};
 use termcolor::{BufferedStandardStream, ColorChoice};
 
 use crate::common::get_env_log;
@@ -103,10 +103,8 @@ impl Log for TermLogger {
     }
 
     fn log(&self, record: &Record) {
-        if let Some(message_filtering) = &self.config.message_filtering {
-            if !message_filtering(record) {
-                return;
-            }
+        if !self.config.is_record_allowed(record) {
+            return;
         }
 
         let _ = self.try_log(record);
